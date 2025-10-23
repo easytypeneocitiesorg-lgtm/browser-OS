@@ -1,283 +1,209 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>BrowserOS — Vercel Single File</title>
-  <style>
-    :root{
-      --accent:#2b7cff;
-      --taskbar:#0f1720;
-      --window-bg:rgba(255,255,255,0.96);
-      --glass: rgba(255,255,255,0.06);
-      --shadow: 0 8px 30px rgba(2,6,23,0.6);
-    }
-    html,body{height:100%;margin:0;font-family:Segoe UI,Roboto,system-ui,-apple-system,'Helvetica Neue',Arial}
-    /* desktop wallpaper (windows 7 sky + modern blur mashup) */
-    .desktop{
-      height:100%;width:100%;overflow:hidden;position:relative;user-select:none;background:
-        radial-gradient(circle at 10% 20%, rgba(255,255,255,0.06), transparent 8%),
-        linear-gradient(180deg,#0e4aad 0%, #3a7bd5 40%, #0b3b6b 100%);
-      display:flex;align-items:flex-start;justify-content:flex-start;padding:18px;
-      background-attachment:fixed;
-    }
-    .desktop:after{content:"";position:absolute;inset:0;background-image:linear-gradient(180deg,rgba(255,255,255,0.02),transparent 30%);pointer-events:none}
-
-    /* desktop icons */
-    .icons{display:flex;flex-wrap:wrap;gap:18px;z-index:1}
-    .icon{width:88px;text-align:center;color:#fff;cursor:grab}
-    .icon img{width:48px;height:48px;display:block;margin:0 auto 6px;border-radius:6px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5))}
-    .icon .label{font-size:13px;line-height:1.1;text-shadow:0 1px 0 rgba(0,0,0,0.5);}
-
-    /* taskbar */
-    .taskbar{position:fixed;bottom:0;left:0;right:0;height:40px;background:linear-gradient(180deg,rgba(0,0,0,0.25),rgba(0,0,0,0.5));display:flex;align-items:center;gap:12px;padding:6px 12px;box-sizing:border-box}
-    .taskbar .start{width:36px;height:28px;background:var(--glass);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff}
-
-    /* windows */
-    .window{position:absolute;width:420px;height:320px;background:var(--window-bg);box-shadow:var(--shadow);border-radius:6px;overflow:hidden;border:1px solid rgba(0,0,0,0.08);display:flex;flex-direction:column}
-    .titlebar{height:34px;background:linear-gradient(180deg,rgba(0,0,0,0.03),transparent);display:flex;align-items:center;gap:8px;padding:0 8px;cursor:grab}
-    .title{flex:1;font-weight:600}
-    .controls{display:flex;gap:6px}
-    .btn{width:28px;height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer}
-
-    .window .content{padding:12px;flex:1;overflow:auto}
-
-    /* simple file explorer */
-    .explorer-list{display:flex;gap:12px}
-    .folder{width:120px;height:100px;background:linear-gradient(180deg,#ffd97a,#ffb74d);border-radius:6px;padding:8px;color:#111;box-shadow:0 6px 18px rgba(0,0,0,0.12);cursor:pointer}
-    .file{padding:8px;border-radius:6px;background:#f3f4f6;margin-bottom:8px}
-
-    /* calculator */
-    .calc-display{height:60px;background:linear-gradient(180deg,#0b2036,#092233);color:#fff;font-size:24px;padding:10px;border-radius:6px;display:flex;align-items:center;justify-content:flex-end}
-    .calc-buttons{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
-    .calc-buttons button{height:44px;border-radius:6px;border:0;cursor:pointer;font-size:18px}
-
-    /* small helpers */
-    .hidden{display:none}
-    .noselect{user-select:none}
-
-    @media (max-width:640px){.window{width:90%;height:70%}}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebOS</title>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: url('https://wallpaperaccess.com/full/3132286.jpg') center/cover no-repeat;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  .desktop {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+  }
+  .icon {
+    position: absolute;
+    width: 80px;
+    text-align: center;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+  }
+  .icon img {
+    width: 64px;
+    height: 64px;
+  }
+  .window {
+    position: absolute;
+    width: 420px;
+    height: 320px;
+    background: #f0f0f0;
+    border: 1px solid #888;
+    border-radius: 6px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+  .titlebar {
+    background: linear-gradient(#2b5797, #1a3b6e);
+    color: white;
+    padding: 5px;
+    cursor: move;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+  }
+  .close {
+    background: red;
+    width: 22px;
+    height: 22px;
+    text-align: center;
+    line-height: 22px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  iframe {
+    width: 100%;
+    height: calc(100% - 32px);
+    border: none;
+  }
+  button {
+    font-size: 16px;
+    width: 23%;
+    margin: 2px;
+  }
+</style>
 </head>
 <body>
-  <div id="desktop" class="desktop" tabindex="0">
-    <div id="icons" class="icons"></div>
-
-    <!-- sample windows container -->
-    <div id="windows"></div>
+<div class="desktop" id="desktop">
+  <div class="icon" style="top:20px;left:20px;" ondblclick="openApp('recycle')">
+    <img src="https://icons.iconarchive.com/icons/microsoft/windows-10/512/Recycle-Bin-Full-icon.png">
+    <div>Recycle Bin</div>
   </div>
-
-  <div class="taskbar">
-    <div class="start">☰</div>
-    <div style="color:#fff;opacity:0.85">BrowserOS</div>
+  <div class="icon" style="top:120px;left:20px;" ondblclick="openApp('calc')">
+    <img src="https://icons.iconarchive.com/icons/microsoft/windows-10/512/Calculator-icon.png">
+    <div>Calculator</div>
   </div>
+  <div class="icon" style="top:220px;left:20px;" ondblclick="openApp('explorer')">
+    <img src="https://icons.iconarchive.com/icons/microsoft/windows-10/512/File-Explorer-icon.png">
+    <div>File Explorer</div>
+  </div>
+  <div class="icon" style="top:320px;left:20px;" ondblclick="openApp('browser')">
+    <img src="https://icons.iconarchive.com/icons/microsoft/windows-10/512/Edge-icon.png">
+    <div>Browser</div>
+  </div>
+</div>
 
 <script>
-/* Simple single-file 'Browser OS' for Vercel deployment
-   - Single index.html
-   - Desktop with draggable icons (positions persisted)
-   - Recycle Bin (non-functional) and Calculator app
-   - File Explorer app (simple, view-only)
-   - Moveable windows
-*/
+let z = 1;
 
-const ICONS = [
-  { id:'recycle', label:'Recycle Bin', type:'recycle' },
-  { id:'calculator', label:'Calculator', type:'calculator' },
-  { id:'explorer', label:'File Explorer', type:'explorer' }
-];
-
-const desktop = document.getElementById('desktop');
-const iconsWrap = document.getElementById('icons');
-const windows = document.getElementById('windows');
-
-// Load positions from localStorage
-function loadPositions(){
-  try{ return JSON.parse(localStorage.getItem('bpos')||'{}') }
-  catch(e){return{}}
-}
-function savePositions(p){ localStorage.setItem('bpos', JSON.stringify(p)) }
-let positions = loadPositions();
-
-// Render icons
-function renderIcons(){
-  iconsWrap.innerHTML='';
-  ICONS.forEach(icon=>{
-    const el = document.createElement('div'); el.className='icon'; el.dataset.id=icon.id; el.dataset.type=icon.type;
-    el.innerHTML = `\n      <img src='data:image/svg+xml;utf8,${encodeURIComponent(iconSVG(icon.type))}' alt=''>\n      <div class='label'>${icon.label}</div>`;
-    iconsWrap.appendChild(el);
-    // position
-    const pos = positions[icon.id];
-    if(pos){ el.style.position='absolute'; el.style.left=pos.x+'px'; el.style.top=pos.y+'px' }
-    else{ el.style.position='relative' }
-
-    makeDraggable(el,(x,y)=>{
-      positions[icon.id]={x,y}; savePositions(positions);
-    });
-
-    el.addEventListener('dblclick', ()=>openIcon(icon));
+function makeDraggable(win, bar){
+  let offsetX, offsetY, dragging = false;
+  bar.addEventListener('mousedown', e=>{
+    dragging = true;
+    offsetX = e.clientX - win.offsetLeft;
+    offsetY = e.clientY - win.offsetTop;
+    win.style.zIndex = ++z;
+  });
+  document.addEventListener('mouseup', ()=> dragging = false);
+  document.addEventListener('mousemove', e=>{
+    if(!dragging) return;
+    win.style.left = e.clientX - offsetX + 'px';
+    win.style.top = e.clientY - offsetY + 'px';
   });
 }
 
-function iconSVG(type){
-  if(type==='recycle') return `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24' fill='%23ffffff'><path d='M9 3v1H4v2h1l1 13a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-13h1V4h-5V3H9z' opacity='0.9'/></svg>`;
-  if(type==='calculator') return `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24' fill='%23ffffff'><path d='M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm2 3v2h6V5H9zm8 12v2H7v-2h10z'/></svg>`;
-  return `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24' fill='%23ffffff'><path d='M10 4H4v16h16V8h-6V4zM6 6h3v3H6V6zM6 11h3v3H6v-3zM11 6h7v3h-7V6zM11 11h7v3h-7v-3z'/></svg>`;
-}
+function createWindow(title, content){
+  const w = document.createElement('div');
+  w.className='window';
+  w.style.top = '100px';
+  w.style.left = '100px';
+  w.style.zIndex = ++z;
 
-// Make any element draggable. If placed absolute it will move; otherwise convert to absolute when dragging.
-function makeDraggable(el,onMove){
-  let dragging=false,offsetX=0,offsetY=0,origX=0,origY=0;
-  el.addEventListener('pointerdown', (e)=>{
-    if(e.button!==0) return; // left only
-    el.setPointerCapture(e.pointerId);
-    dragging=true; el.style.cursor='grabbing';
-    const rect = el.getBoundingClientRect();
-    // if position not absolute, convert and retain visual position
-    if(getComputedStyle(el).position !== 'absolute'){
-      el.style.position='absolute';
-      const parentRect = desktop.getBoundingClientRect();
-      el.style.left = (rect.left - parentRect.left) + 'px';
-      el.style.top = (rect.top - parentRect.top) + 'px';
-    }
-    offsetX = e.clientX - el.getBoundingClientRect().left;
-    offsetY = e.clientY - el.getBoundingClientRect().top;
+  const t = document.createElement('div');
+  t.className='titlebar';
+  const txt = document.createElement('span');
+  txt.textContent = title;
 
-    function moveHandler(ev){
-      if(!dragging) return;
-      const parentRect = desktop.getBoundingClientRect();
-      let x = ev.clientX - parentRect.left - offsetX;
-      let y = ev.clientY - parentRect.top - offsetY;
-      // keep on screen
-      x = Math.max(6, Math.min(parentRect.width - el.offsetWidth - 6, x));
-      y = Math.max(6, Math.min(parentRect.height - el.offsetHeight - 46, y));
-      el.style.left = x + 'px'; el.style.top = y + 'px';
-      onMove && onMove(Math.round(x),Math.round(y));
-    }
-    function upHandler(){ dragging=false; el.style.cursor='grab'; el.releasePointerCapture(e.pointerId); window.removeEventListener('pointermove', moveHandler); window.removeEventListener('pointerup', upHandler); }
-    window.addEventListener('pointermove', moveHandler);
-    window.addEventListener('pointerup', upHandler);
-  });
-}
-
-// Windows management
-let topZ = 10;
-function createWindow(opts){
-  const win = document.createElement('div'); win.className='window'; win.style.left=(opts.x||100)+'px'; win.style.top=(opts.y||80)+'px'; win.style.width=(opts.width||420)+'px'; win.style.height=(opts.height||320)+'px';
-  win.style.zIndex = ++topZ;
-  win.innerHTML = `
-    <div class='titlebar'><div class='title'>${opts.title||'Window'}</div><div class='controls'><div class='btn close'>✕</div></div></div>
-    <div class='content'>${opts.content||''}</div>`;
-  windows.appendChild(win);
-
-  // focus/open
-  win.addEventListener('mousedown', ()=>win.style.zIndex=++topZ);
-  // close
-  win.querySelector('.close').addEventListener('click', ()=>win.remove());
-  // drag by titlebar
-  const tb = win.querySelector('.titlebar');
-  makeDraggable(tb,(x,y)=>{ // compute window left/top based on titlebar movements
-    // tb itself is inside window; to move window we set from pointer events on tb
-  });
-  // Instead, implement titlebar dragging directly
-  tb.addEventListener('pointerdown',(e)=>{
-    if(e.button!==0) return; tb.setPointerCapture(e.pointerId); const start = {x:e.clientX,y:e.clientY}; const rect = win.getBoundingClientRect();
-    function mv(ev){ const dx = ev.clientX - start.x; const dy = ev.clientY - start.y; win.style.left = rect.left + dx - desktop.getBoundingClientRect().left + 'px'; win.style.top = rect.top + dy - desktop.getBoundingClientRect().top + 'px'; }
-    function up(){ tb.releasePointerCapture(e.pointerId); window.removeEventListener('pointermove',mv); window.removeEventListener('pointerup',up); }
-    window.addEventListener('pointermove',mv); window.addEventListener('pointerup',up);
-  });
-
-  return win;
-}
-
-// Apps
-function openIcon(icon){
-  if(icon.type==='calculator') openCalculator();
-  if(icon.type==='recycle') openRecycle();
-  if(icon.type==='explorer') openExplorer();
-}
-
-function openRecycle(){
-  const w = createWindow({title:'Recycle Bin (read-only)', content:`<div style='padding:8px;color:#444'>This recycle bin is decorative only. Nothing can be deleted.</div><div style='margin-top:8px'>No items</div>`});
-}
-
-function openCalculator(){
-  const content = document.createElement('div');
-  content.innerHTML = `
-    <div class='calc-display' id='calc-display'>0</div>
-    <div class='calc-buttons'>
-      <button data-val='7'>7</button><button data-val='8'>8</button><button data-val='9'>9</button><button data-op='/'>&divide;</button>
-      <button data-val='4'>4</button><button data-val='5'>5</button><button data-val='6'>6</button><button data-op='*'>&times;</button>
-      <button data-val='1'>1</button><button data-val='2'>2</button><button data-val='3'>3</button><button data-op='-'>−</button>
-      <button data-val='0'>0</button><button data-val='.'>.</button><button id='calc-eq'>=</button><button data-op='+'>+</button>
-    </div>`;
-  const win = createWindow({title:'Calculator', content:content.outerHTML, width:320, height:340});
-  const disp = win.querySelector('#calc-display');
-  const btns = win.querySelectorAll('.calc-buttons button');
-  let expr = '';
-  btns.forEach(b=>{
-    b.addEventListener('click', ()=>{
-      if(b.id==='calc-eq'){
-        try{ const res = Function('return ('+expr.replace(/×/g,'*').replace(/÷/g,'/') + ')')(); expr = String(res); disp.textContent = expr }catch(e){disp.textContent='Error'; expr=''}
-      } else if(b.dataset.val){ expr += b.dataset.val; disp.textContent = expr }
-      else if(b.dataset.op){ expr += b.dataset.op; disp.textContent = expr }
-    })
-  });
-}
-
-function openExplorer(){
-  const sample = {
-    'Home':{
-      'Documents':{"notes.txt":"Welcome to BrowserOS! This is a fake file system stored in memory."},
-      'Pictures':{"wallpaper.jpg":"(image placeholder)"}
-    }
+  const c = document.createElement('div');
+  c.className='close';
+  c.textContent='×';
+  c.onclick = () => {
+    w.remove(); // window properly closes and does not bug out
   };
-  const content = document.createElement('div');
-  content.innerHTML = `
-    <div style='display:flex;gap:12px'>
-      <div style='width:200px'>
-        <div style='font-weight:700;margin-bottom:8px'>Folders</div>
-        <div id='folder-list'></div>
-      </div>
-      <div style='flex:1'>
-        <div style='font-weight:700;margin-bottom:8px'>Files</div>
-        <div id='file-list'></div>
-      </div>
-    </div>`;
-  const win = createWindow({title:'File Explorer', content:content.outerHTML, width:640, height:420});
 
-  const FL = win.querySelector('#folder-list');
-  const FILES = win.querySelector('#file-list');
-
-  function showFolder(name, obj){ FL.innerHTML = ''; FILES.innerHTML = ''; for(const k in obj){ const el = document.createElement('div'); el.className='folder'; el.textContent=k; el.addEventListener('click', ()=>{
-      // show subitems
-      FILES.innerHTML=''; const sub = obj[k]; for(const f in sub){ const fileEl = document.createElement('div'); fileEl.className='file'; fileEl.textContent=f; fileEl.addEventListener('click', ()=>{
-        // open a viewer
-        const txt = sub[f]; const vw = createWindow({title:f, content:`<pre style='white-space:pre-wrap'>${escapeHtml(txt)}</pre>`, width:480, height:320});
-      }); FILES.appendChild(fileEl) }
-    }); FL.appendChild(el) }
-  }
-  // init with root
-  for(const k in sample){ showFolder(k, sample[k]) }
+  t.append(txt, c);
+  w.append(t, content);
+  document.body.append(w);
+  makeDraggable(w, t);
+  return w;
 }
 
-function escapeHtml(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])) }
-
-// initial render
-renderIcons();
-
-// accessibility: keyboard to focus desktop
-desktop.addEventListener('keydown',(e)=>{
-  if(e.key==='Escape'){
-    // close top window
-    const wins = windows.querySelectorAll('.window'); if(wins.length) wins[wins.length-1].remove();
+function openApp(app){
+  if(app === 'recycle'){
+    let c = document.createElement('div');
+    c.innerHTML = '<p style="padding:10px;">Recycle Bin is empty.</p>';
+    createWindow('Recycle Bin', c);
+  } 
+  else if(app === 'calc'){
+    let c = document.createElement('div');
+    c.style.padding = '5px';
+    c.innerHTML = `
+      <input id="calcInput" style="width:100%;font-size:20px;" readonly><br>
+      ${['7','8','9','/','4','5','6','*','1','2','3','-','0','.','=','+']
+        .map(b=>`<button onclick="calcPress('${b}')">${b}</button>`).join('')}
+    `;
+    createWindow('Calculator', c);
+  } 
+  else if(app === 'explorer'){
+    let c = document.createElement('div');
+    c.style.padding = '10px';
+    c.innerHTML = '<ul><li ondblclick="openWallpaper()">wallpaper.jpg</li></ul>';
+    createWindow('File Explorer', c);
+  } 
+  else if(app === 'browser'){
+    let c = document.createElement('div');
+    c.innerHTML = `
+      <input id="url" placeholder="Enter URL" style="width:100%;box-sizing:border-box;padding:4px;">
+      <iframe id="frame"></iframe>
+    `;
+    const w = createWindow('Browser', c);
+    const urlInput = c.querySelector('#url');
+    const frame = c.querySelector('#frame');
+    urlInput.addEventListener('keydown', e=>{
+      if(e.key==='Enter'){
+        let val = urlInput.value.trim();
+        if(!val.startsWith('http')) val = 'https://' + val;
+        frame.src = val;
+      }
+    });
   }
-});
+}
 
-// small touch to bring window to front when created
-windows.addEventListener('click',(e)=>{ const w = e.target.closest('.window'); if(w) w.style.zIndex=++topZ });
+function calcPress(v){
+  let i = document.getElementById('calcInput');
+  if(!i) return;
+  if(v==='='){
+    try { i.value = eval(i.value); }
+    catch { i.value = 'Error'; }
+  } else i.value += v;
+}
 
-// small note: recycle bin non-functional by design
+function openWallpaper(){
+  const choice = prompt('Type 1 to upload a file, or 2 to use an image link:');
+  if(choice === '1'){
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/png,image/jpeg';
+    input.onchange = e => {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        document.body.style.background = `url('${reader.result}') center/cover no-repeat`;
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  } else if(choice === '2'){
+    const link = prompt('Enter image URL:');
+    if(link) document.body.style.background = `url('${link}') center/cover no-repeat`;
+  }
+}
 </script>
 </body>
 </html>
