@@ -1,209 +1,632 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WebOS</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>BrowserOS — Single File</title>
 <style>
-  body {
-    margin: 0;
-    overflow: hidden;
-    background: url('https://wallpaperaccess.com/full/3132286.jpg') center/cover no-repeat;
-    font-family: 'Segoe UI', sans-serif;
+  :root{
+    --accent:#2b7cff;
+    --taskbar:#0f1720;
+    --window-bg:rgba(255,255,255,0.98);
+    --glass: rgba(255,255,255,0.06);
+    --shadow: 0 10px 30px rgba(2,6,23,0.55);
   }
-  .desktop {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
+  html,body{height:100%;margin:0;font-family:Segoe UI, Roboto, system-ui, -apple-system, 'Helvetica Neue', Arial;background:#0b3b6b}
+  /* Desktop */
+  .desktop{
+    height:100%;width:100%;overflow:hidden;position:relative;user-select:none;
+    display:flex;align-items:flex-start;justify-content:flex-start;padding:18px;
+    background: radial-gradient(circle at 10% 20%, rgba(255,255,255,0.04), transparent 8%),
+               linear-gradient(180deg,#0e4aad 0%, #3a7bd5 40%, #0b3b6b 100%);
+    background-size:cover;background-position:center;
   }
-  .icon {
-    position: absolute;
-    width: 80px;
-    text-align: center;
-    color: white;
-    cursor: pointer;
-    user-select: none;
-  }
-  .icon img {
-    width: 64px;
-    height: 64px;
-  }
-  .window {
-    position: absolute;
-    width: 420px;
-    height: 320px;
-    background: #f0f0f0;
-    border: 1px solid #888;
-    border-radius: 6px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.4);
-    overflow: hidden;
-  }
-  .titlebar {
-    background: linear-gradient(#2b5797, #1a3b6e);
-    color: white;
-    padding: 5px;
-    cursor: move;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-weight: 600;
-  }
-  .close {
-    background: red;
-    width: 22px;
-    height: 22px;
-    text-align: center;
-    line-height: 22px;
-    border-radius: 3px;
-    cursor: pointer;
-  }
-  iframe {
-    width: 100%;
-    height: calc(100% - 32px);
-    border: none;
-  }
-  button {
-    font-size: 16px;
-    width: 23%;
-    margin: 2px;
-  }
+  .overlay-gradient{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(180deg,rgba(255,255,255,0.02),transparent 30%)}
+  /* icons */
+  .icons{display:flex;flex-wrap:wrap;gap:18px;z-index:2}
+  .icon{width:88px;text-align:center;color:#fff;cursor:grab;user-select:none;position:relative}
+  .icon img{width:48px;height:48px;display:block;margin:0 auto 6px;border-radius:8px;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.6))}
+  .icon .label{font-size:13px;line-height:1.1;text-shadow:0 1px 0 rgba(0,0,0,0.45)}
+  .icon.inbin{opacity:0.55;filter:grayscale(60%);}
+
+  /* taskbar */
+  .taskbar{position:fixed;bottom:0;left:0;right:0;height:44px;background:linear-gradient(180deg,rgba(0,0,0,0.22),rgba(0,0,0,0.45));display:flex;align-items:center;gap:12px;padding:6px 12px;box-sizing:border-box;z-index:999}
+  .taskbar .start{width:40px;height:32px;background:var(--glass);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff}
+  /* windows */
+  .window{position:absolute;width:520px;height:380px;background:var(--window-bg);box-shadow:var(--shadow);border-radius:8px;overflow:hidden;border:1px solid rgba(0,0,0,0.08);display:flex;flex-direction:column}
+  .titlebar{height:40px;background:linear-gradient(180deg,rgba(0,0,0,0.03),transparent);display:flex;align-items:center;gap:8px;padding:0 10px;cursor:grab;flex-shrink:0}
+  .title{flex:1;font-weight:700}
+  .controls{display:flex;gap:8px}
+  .btn{width:34px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer}
+  .closeBtn{background:#ff5c5c;color:#222;font-weight:700}
+  .minBtn{background:#ffd25c;color:#222}
+  .window .content{padding:12px;flex:1;overflow:auto}
+  /* explorer */
+  .sidebar{width:200px;border-right:1px solid #e6e6e6;padding-right:10px;box-sizing:border-box}
+  .folderItem{padding:8px;border-radius:6px;cursor:pointer;margin-bottom:6px;background:#f3f4f6}
+  .fileItem{padding:8px;border-radius:6px;background:#fff;margin-bottom:8px;cursor:grab;border:1px solid #eee;display:flex;justify-content:space-between}
+  .fileBtn{background:#2b7cff;color:#fff;border:0;padding:6px 8px;border-radius:6px;cursor:pointer}
+  /* small */
+  .hidden{display:none}
+  .center{display:flex;align-items:center;justify-content:center}
+  /* responsive */
+  @media(max-width:720px){ .window{width:92%;height:70%} .sidebar{display:none} }
 </style>
 </head>
 <body>
-<div class="desktop" id="desktop">
-  <div class="icon" style="top:20px;left:20px;" ondblclick="openApp('recycle')">
-    <img src="https://icons.iconarchive.com/icons/microsoft/windows-10/512/Recycle-Bin-Full-icon.png">
-    <div>Recycle Bin</div>
+  <div id="desktop" class="desktop" tabindex="0">
+    <div class="overlay-gradient"></div>
+    <div id="icons" class="icons" aria-hidden="false"></div>
+    <div id="windows"></div>
   </div>
-  <div class="icon" style="top:120px;left:20px;" ondblclick="openApp('calc')">
-    <img src="https://icons.iconarchive.com/icons/microsoft/windows-10/512/Calculator-icon.png">
-    <div>Calculator</div>
+
+  <div class="taskbar">
+    <div class="start">☰</div>
+    <div style="color:#fff;opacity:0.9">BrowserOS</div>
+    <div style="margin-left:auto;color:#fff;opacity:0.9">Status: ready</div>
   </div>
-  <div class="icon" style="top:220px;left:20px;" ondblclick="openApp('explorer')">
-    <img src="https://icons.iconarchive.com/icons/microsoft/windows-10/512/File-Explorer-icon.png">
-    <div>File Explorer</div>
-  </div>
-  <div class="icon" style="top:320px;left:20px;" ondblclick="openApp('browser')">
-    <img src="https://icons.iconarchive.com/icons/microsoft/windows-10/512/Edge-icon.png">
-    <div>Browser</div>
-  </div>
-</div>
 
 <script>
-let z = 1;
+/* BrowserOS single-file implementation
+   - draggable icons that persist
+   - drag icons into recycle bin (non-deleting): they stay in bin until moved out
+   - explorer with Desktop/Downloads/Documents/Pictures
+   - wallpaper.jpg is a file button in explorer -> opens an OS window with upload / URL textbox (no prompt)
+   - wallpaper persists to localStorage
+   - file drag & drop between folders (HTML5 DnD)
+*/
 
-function makeDraggable(win, bar){
-  let offsetX, offsetY, dragging = false;
-  bar.addEventListener('mousedown', e=>{
-    dragging = true;
-    offsetX = e.clientX - win.offsetLeft;
-    offsetY = e.clientY - win.offsetTop;
-    win.style.zIndex = ++z;
-  });
-  document.addEventListener('mouseup', ()=> dragging = false);
-  document.addEventListener('mousemove', e=>{
-    if(!dragging) return;
-    win.style.left = e.clientX - offsetX + 'px';
-    win.style.top = e.clientY - offsetY + 'px';
-  });
-}
+const ICON_DEFS = [
+  { id: 'recycle', label: 'Recycle Bin', icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAAD9jU7eAAAACXBIWXMAAAsTAAALEwEAmpwYAAAB20lEQVR4nO2WzUrDQBSGc3wA6gAdYAFoAFoABqBqQAcgA1oAFoAF0gNwB1kJ2I7s1YEQl2kXn2bM2b3Yb3Y0u5C+2s1htrdM/1iX7ZcM+QwC+iPoY0w4ZgX9h5gQ2wA8sA/kLi2Vq5Gg4tYCEzFhVnWj9s0qg2gM8wS1WvWbZs8jW0Ytlv3YHq8ti5iW1q7b8rK+qYvYbVgqjzFmM6p3j5XyqQ5z1zEsQxwG4D+g4cUzq2Z4g2w35g4Q4Yq2iQw8b2o3o3q3q5fT6bqf9J1vY/D6s7u/Hg7d9v4fS9w5gX7wL8A5f8L2gP4/4g1wWmQx8B8wL4gPhv2wB1wG5BVc1p7HqgEzwA7gN9gBbgGfFJYQ7GHs3n1l6Eo8k6r1b7nRq0z5XwD3gQ8gJcBz1u3f0b2hZr1d3cQzjS3sHh8v6z2+8Y7gFj6u8gLw7oHkdzV9b3k1dhbv/EoAfbf8qvDgJc3y2vQTD/fqQ2YHZNzJ9q9b2QAAAABJRU5ErkJggg==' },
+  { id: 'calculator', label: 'Calculator', icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAAD9jU7eAAAACXBIWXMAAAsTAAALEwEAmpwYAAABxUlEQVR4nO2WwW7CMBCFd6AEgAegA6gA6gA6gAegAegA6gA6oF2E6Q2s4oS1J2iK3Z2bX0qkQH5J3t/4zKQw9m3c3A4fGk8uDkZqgQmW0p3mYAcwD4xqgQxgqg3wXgP3gQ6v6ZqG1N1wA7wOHtBb2o2gFhQhtm8Jv2w3cB1wHs0H6Jj5yqgqg1gQx0Jr1f7kE8i4l9+q8j6I9hA9wG4wZ+q9z3n0r0P8hI4n9r2nF5x9gk3p2pX9n6bq8c1gA7gCugC9Z1SxgHs6YwqtnvP6f0jv4z5wqgI7wL9wF8wD3wH7gB8wD9gF1gPqCrwDq7ew4bGQDz4wQ0xU0D2s9nNQG4C0YgJd5gD7Q9sAHoAbY2eB2Y0K2g3m0fK0W1u3r3wqg0UQmM6p3e7I3oC1wF7wN+gP2gQ3wJ2wFQwPf3v8G0gOG2r0V8j6Fb6Cp8o1u9QFqk1Q1Lo9YwAAAABJRU5ErkJggg==' },
+  { id: 'explorer', label: 'File Explorer', icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAAD9jU7eAAAACXBIWXMAAAsTAAALEwEAmpwYAAABtElEQVR4nO2WsUoDURBFv2gHZAB0gAdIAq0ANoAC6gA6gA6gAegAegA6gA6gA6gO0s5wqGQ1F7Yb7m7mZ3ZkS3qkQ9kT2f7nM8DvY4hYlnV3gGf4w8QvjgO4wP8AkcQ6YK7nAJ4kLMZ6X2m2m7YB3wBvQG+4q2gVwA+4C7wE8wH8wD3wH8wH8wD3wH8wD3wH3gL8AcwG/4C3wB8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD4wH+gBc3Y9oA+oX/AFU0r5v4v+oHrFv9v7l4Jp7yq4v9gJfGA9Qh0Zr7t6qvG7j1c7fB+q2r3QHcK3wz3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD7Q5c2m0gQ1gAAAABJRU5ErkJggg==' },
+  { id: 'browser', label: 'Internet', icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAAD9jU7eAAAACXBIWXMAAAsTAAALEwEAmpwYAAABvElEQVR4nO2WTU7CQBSGv4gAagBqgAagBqgAagBqgAagBqgAagBqgY2hO6g2o0bS0u2u3m3m3k2v9p4oS2b5n7fZvew8k0y+2e8y8nQAC7wA3wD8wG8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wF8gD1Kq6qY3z8X3R2kK3Y1gH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3QB3gN6m+3+8p8j3mQAAAABJRU5ErkJggg==' }
+];
 
-function createWindow(title, content){
-  const w = document.createElement('div');
-  w.className='window';
-  w.style.top = '100px';
-  w.style.left = '100px';
-  w.style.zIndex = ++z;
+const DESKTOP_KEY = 'bos_icons_positions_v1';
+const WALLPAPER_KEY = 'bos_wallpaper_v1';
+const FS_KEY = 'bos_fs_v1';
+const BIN_STATE_KEY = 'bos_bin_v1';
 
-  const t = document.createElement('div');
-  t.className='titlebar';
-  const txt = document.createElement('span');
-  txt.textContent = title;
+const desktop = document.getElementById('desktop');
+const iconsWrap = document.getElementById('icons');
+const windowsRoot = document.getElementById('windows');
 
-  const c = document.createElement('div');
-  c.className='close';
-  c.textContent='×';
-  c.onclick = () => {
-    w.remove(); // window properly closes and does not bug out
+let topZ = 200;
+
+// load persisted objects
+function loadJSON(key, fallback){ try{ const s = localStorage.getItem(key); return s ? JSON.parse(s) : fallback; } catch(e){ return fallback; } }
+function saveJSON(key, obj){ localStorage.setItem(key, JSON.stringify(obj)); }
+
+let positions = loadJSON(DESKTOP_KEY, {}); // id -> {x,y, inBin:boolean}
+let fs = loadJSON(FS_KEY, null);
+let binState = loadJSON(BIN_STATE_KEY, {}); // id -> true/false
+
+// initial filesystem if none
+if(!fs){
+  fs = {
+    Desktop: {
+      'welcome.txt': 'Welcome to BrowserOS!\nDouble-click files to open. Drag files between folders.\nDouble-click wallpaper.jpg in Pictures to change wallpaper.',
+    },
+    Downloads: {},
+    Documents: {
+      'todo.txt': ' - make cool OS UI\n - add wallpapers\n - ship it',
+    },
+    Pictures: {
+      'wallpaper.jpg': '(double-click to change wallpaper)',
+      'logo.png': '(placeholder image file)'
+    }
   };
-
-  t.append(txt, c);
-  w.append(t, content);
-  document.body.append(w);
-  makeDraggable(w, t);
-  return w;
+  saveJSON(FS_KEY, fs);
 }
 
-function openApp(app){
-  if(app === 'recycle'){
-    let c = document.createElement('div');
-    c.innerHTML = '<p style="padding:10px;">Recycle Bin is empty.</p>';
-    createWindow('Recycle Bin', c);
-  } 
-  else if(app === 'calc'){
-    let c = document.createElement('div');
-    c.style.padding = '5px';
-    c.innerHTML = `
-      <input id="calcInput" style="width:100%;font-size:20px;" readonly><br>
-      ${['7','8','9','/','4','5','6','*','1','2','3','-','0','.','=','+']
-        .map(b=>`<button onclick="calcPress('${b}')">${b}</button>`).join('')}
-    `;
-    createWindow('Calculator', c);
-  } 
-  else if(app === 'explorer'){
-    let c = document.createElement('div');
-    c.style.padding = '10px';
-    c.innerHTML = '<ul><li ondblclick="openWallpaper()">wallpaper.jpg</li></ul>';
-    createWindow('File Explorer', c);
-  } 
-  else if(app === 'browser'){
-    let c = document.createElement('div');
-    c.innerHTML = `
-      <input id="url" placeholder="Enter URL" style="width:100%;box-sizing:border-box;padding:4px;">
-      <iframe id="frame"></iframe>
-    `;
-    const w = createWindow('Browser', c);
-    const urlInput = c.querySelector('#url');
-    const frame = c.querySelector('#frame');
-    urlInput.addEventListener('keydown', e=>{
-      if(e.key==='Enter'){
-        let val = urlInput.value.trim();
-        if(!val.startsWith('http')) val = 'https://' + val;
-        frame.src = val;
+// create icons on desktop
+function renderIcons(){
+  iconsWrap.innerHTML = '';
+  ICON_DEFS.forEach(def=>{
+    const el = document.createElement('div');
+    el.className = 'icon';
+    el.dataset.id = def.id;
+    el.dataset.type = def.id;
+    el.tabIndex = 0;
+    el.innerHTML = `<img src="${def.icon}" alt="${def.label}"><div class="label">${def.label}</div>`;
+    iconsWrap.appendChild(el);
+
+    // apply saved position or use vertical stack
+    const p = positions[def.id];
+    if(p && typeof p.x === 'number' && typeof p.y === 'number'){
+      el.style.position = 'absolute';
+      el.style.left = p.x + 'px';
+      el.style.top = p.y + 'px';
+      if(p.inBin) el.classList.add('inbin');
+    } else {
+      // place stacked on left if not stored
+      el.style.position = 'absolute';
+      const idx = ICON_DEFS.findIndex(i=>i.id===def.id);
+      el.style.left = 20 + 'px';
+      el.style.top = (20 + idx * 100) + 'px';
+      positions[def.id] = { x: parseInt(el.style.left), y: parseInt(el.style.top), inBin: false };
+      saveJSON(DESKTOP_KEY, positions);
+    }
+
+    // doubleclick opens app
+    el.addEventListener('dblclick', ()=> openApp(def.id));
+
+    // make draggable
+    makeIconDraggable(el);
+  });
+}
+function makeIconDraggable(el){
+  let dragging = false, offsetX = 0, offsetY = 0;
+  el.addEventListener('pointerdown', (e) => {
+    if(e.button !== 0) return;
+    el.setPointerCapture(e.pointerId);
+    dragging = true;
+    const rect = el.getBoundingClientRect();
+    const deskRect = desktop.getBoundingClientRect();
+    // ensure absolute
+    if(getComputedStyle(el).position !== 'absolute'){
+      el.style.position = 'absolute';
+      el.style.left = rect.left - deskRect.left + 'px';
+      el.style.top = rect.top - deskRect.top + 'px';
+    }
+    offsetX = e.clientX - el.getBoundingClientRect().left;
+    offsetY = e.clientY - el.getBoundingClientRect().top;
+    el.style.cursor = 'grabbing';
+    el.style.zIndex = ++topZ;
+  });
+  function moveHandler(e){
+    if(!dragging) return;
+    const desk = desktop.getBoundingClientRect();
+    let x = e.clientX - desk.left - offsetX;
+    let y = e.clientY - desk.top - offsetY;
+    x = Math.max(6, Math.min(desk.width - el.offsetWidth - 6, x));
+    y = Math.max(6, Math.min(desk.height - el.offsetHeight - 46, y));
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+  }
+  function upHandler(e){
+    if(!dragging) return;
+    dragging = false;
+    el.style.cursor = 'grab';
+    el.releasePointerCapture(e.pointerId);
+    // check if dropped on recycle bin icon
+    const binEl = document.querySelector('.icon[data-type="recycle"]');
+    if(binEl){
+      const binRect = binEl.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      // overlap test
+      const overlapping = !(elRect.right < binRect.left || elRect.left > binRect.right || elRect.bottom < binRect.top || elRect.top > binRect.bottom);
+      if(overlapping){
+        // mark in bin
+        el.classList.add('inbin');
+        positions[el.dataset.id] = { x: binRect.left - desktop.getBoundingClientRect().left + 8, y: binRect.top - desktop.getBoundingClientRect().top + 8, inBin: true };
+        // move icon visually to bin area
+        el.style.left = positions[el.dataset.id].x + 'px';
+        el.style.top = positions[el.dataset.id].y + 'px';
+        saveJSON(DESKTOP_KEY, positions);
+        binState[el.dataset.id] = true;
+        saveJSON(BIN_STATE_KEY, binState);
+        return;
       }
+    }
+    // if not overlapping bin, ensure it's removed from bin if previously in
+    if(positions[el.dataset.id] && positions[el.dataset.id].inBin){
+      positions[el.dataset.id].inBin = false;
+      el.classList.remove('inbin');
+    }
+    positions[el.dataset.id] = { x: parseInt(el.style.left), y: parseInt(el.style.top), inBin: !!positions[el.dataset.id].inBin };
+    saveJSON(DESKTOP_KEY, positions);
+    // update binState store
+    if(binState[el.dataset.id]){ binState[el.dataset.id] = !!positions[el.dataset.id].inBin; saveJSON(BIN_STATE_KEY, binState); }
+  }
+  window.addEventListener('pointermove', moveHandler);
+  window.addEventListener('pointerup', upHandler);
+}
+
+/* Window system */
+function createWindow(opts){
+  const win = document.createElement('div');
+  win.className = 'window';
+  win.style.left = (opts.x || 120) + 'px';
+  win.style.top = (opts.y || 120) + 'px';
+  win.style.width = opts.width ? opts.width + 'px' : '520px';
+  win.style.height = opts.height ? opts.height + 'px' : '380px';
+  win.style.zIndex = ++topZ;
+
+  const titlebar = document.createElement('div');
+  titlebar.className = 'titlebar';
+  const tspan = document.createElement('div');
+  tspan.className = 'title';
+  tspan.textContent = opts.title || 'Window';
+  const controls = document.createElement('div');
+  controls.className = 'controls';
+  const min = document.createElement('div'); min.className = 'btn minBtn'; min.textContent = '—';
+  const close = document.createElement('div'); close.className = 'btn closeBtn'; close.textContent = '✕';
+  controls.appendChild(min);
+  controls.appendChild(close);
+  titlebar.appendChild(tspan);
+  titlebar.appendChild(controls);
+
+  const content = document.createElement('div');
+  content.className = 'content';
+  if(typeof opts.content === 'string') content.innerHTML = opts.content;
+  else if(opts.content instanceof HTMLElement) content.appendChild(opts.content);
+
+  win.appendChild(titlebar);
+  win.appendChild(content);
+  windowsRoot.appendChild(win);
+
+  // dragging
+  makeWindowDraggable(win, titlebar);
+
+  // bring to front on pointerdown
+  win.addEventListener('pointerdown', ()=> win.style.zIndex = ++topZ );
+
+  // close
+  close.addEventListener('click', ()=> {
+    // fully remove element
+    win.remove();
+  });
+
+  // minimize (just hide)
+  min.addEventListener('click', ()=> {
+    // toggle
+    if(content.style.display === 'none'){ content.style.display = ''; win.style.height = opts.height ? opts.height + 'px' : '380px'; }
+    else { content.style.display = 'none'; win.style.height = '40px'; }
+  });
+
+  return { win, content, titlebar };
+}
+function makeWindowDraggable(win, bar){
+  let dragging=false, start={x:0,y:0}, orig={l:0,t:0};
+  bar.addEventListener('pointerdown', (e)=>{
+    if(e.button !== 0) return;
+    dragging = true;
+    start.x = e.clientX; start.y = e.clientY;
+    orig.l = win.offsetLeft; orig.t = win.offsetTop;
+    win.setPointerCapture(e.pointerId);
+  });
+  function mv(e){
+    if(!dragging) return;
+    const dx = e.clientX - start.x; const dy = e.clientY - start.y;
+    win.style.left = (orig.l + dx) + 'px';
+    win.style.top = (orig.t + dy) + 'px';
+  }
+  function up(e){
+    if(!dragging) return;
+    dragging = false;
+    try{ bar.releasePointerCapture(e.pointerId); }catch(e){}
+  }
+  window.addEventListener('pointermove', mv);
+  window.addEventListener('pointerup', up);
+}
+
+/* Apps */
+function openApp(id){
+  if(id === 'recycle') openRecycle();
+  else if(id === 'calculator') openCalculator();
+  else if(id === 'explorer') openExplorer();
+  else if(id === 'browser') openBrowser();
+}
+
+/* Recycle bin window lists what's in the bin (icons only) */
+function openRecycle(){
+  const el = document.createElement('div');
+  el.style.display = 'flex'; el.style.flexDirection = 'column'; el.style.height = '100%';
+  const header = document.createElement('div'); header.textContent = 'Items in Recycle Bin (icons moved here)';
+  header.style.fontWeight = '700'; header.style.marginBottom = '8px';
+  const list = document.createElement('div'); list.style.flex = '1'; list.style.overflow = 'auto';
+  el.appendChild(header); el.appendChild(list);
+  // populate from positions/binState
+  Object.keys(positions).forEach(id=>{
+    if(positions[id] && positions[id].inBin){
+      const row = document.createElement('div'); row.style.padding='8px'; row.style.borderBottom='1px solid #eee';
+      row.textContent = ICON_DEFS.find(d=>d.id===id)?.label || id;
+      list.appendChild(row);
+    }
+  });
+  createWindow({ title: 'Recycle Bin (decorative)', content: el, width: 420, height: 320 });
+}
+
+/* Calculator app */
+function openCalculator(){
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = `
+    <div style="display:flex;flex-direction:column;height:100%">
+      <div id="calc-display" style="height:60px;background:#0b2036;color:#fff;font-size:28px;padding:10px;border-radius:8px;display:flex;align-items:center;justify-content:flex-end">0</div>
+      <div style="margin-top:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+        <button data-val="7">7</button><button data-val="8">8</button><button data-val="9">9</button><button data-op="/">÷</button>
+        <button data-val="4">4</button><button data-val="5">5</button><button data-val="6">6</button><button data-op="*">×</button>
+        <button data-val="1">1</button><button data-val="2">2</button><button data-val="3">3</button><button data-op="-">−</button>
+        <button data-val="0">0</button><button data-val=".">.</button><button id="calc-eq">=</button><button data-op="+">+</button>
+      </div>
+    </div>
+  `;
+  const { win, content } = createWindow({ title: 'Calculator', content: wrapper, width: 360, height: 360 });
+  const display = content.querySelector('#calc-display');
+  let expr = '';
+  content.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      if(b.id === 'calc-eq'){
+        try{
+          const safe = expr.replace(/×/g,'*').replace(/÷/g,'/');
+          const res = Function('return ('+safe+')')();
+          expr = String(res); display.textContent = expr;
+        }catch(e){ display.textContent = 'Error'; expr = ''; }
+      } else if(b.dataset.val){ expr += b.dataset.val; display.textContent = expr; }
+      else if(b.dataset.op){ expr += b.dataset.op; display.textContent = expr; }
+    });
+  });
+}
+
+/* File Explorer app */
+function openExplorer(){
+  // build UI
+  const container = document.createElement('div');
+  container.style.display = 'flex';
+  container.style.height = '100%';
+  container.innerHTML = `
+    <div class="sidebar" id="fs-sidebar">
+      <div style="font-weight:700;margin-bottom:8px">Folders</div>
+      <div id="folder-list"></div>
+    </div>
+    <div style="flex:1;padding-left:12px;box-sizing:border-box;display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:700">Files</div>
+        <div>
+          <button id="new-file" class="fileBtn">New file</button>
+          <button id="new-folder" class="fileBtn">New folder</button>
+        </div>
+      </div>
+      <div id="file-list" style="flex:1;margin-top:8px;overflow:auto;padding-right:8px"></div>
+    </div>
+  `;
+  const { win, content } = createWindow({ title: 'File Explorer', content: container, width: 760, height: 480 });
+  const folderList = content.querySelector('#folder-list');
+  const fileList = content.querySelector('#file-list');
+
+  // render folder list
+  function renderFolders(){
+    folderList.innerHTML = '';
+    Object.keys(fs).forEach(folder=>{
+      const f = document.createElement('div'); f.className = 'folderItem'; f.textContent = folder; f.draggable = false;
+      f.addEventListener('click', ()=> showFolder(folder));
+      folderList.appendChild(f);
     });
   }
-}
+  let activeFolder = Object.keys(fs)[0];
 
-function calcPress(v){
-  let i = document.getElementById('calcInput');
-  if(!i) return;
-  if(v==='='){
-    try { i.value = eval(i.value); }
-    catch { i.value = 'Error'; }
-  } else i.value += v;
-}
+  function showFolder(name){
+    activeFolder = name;
+    fileList.innerHTML = '';
+    const files = fs[name];
+    Object.keys(files).forEach(fname=>{
+      const fi = document.createElement('div');
+      fi.className = 'fileItem';
+      fi.draggable = true;
+      fi.dataset.name = fname;
+      fi.innerHTML = `<div>${fname}</div><div style="display:flex;gap:8px"><button class="fileBtn open">Open</button><button class="fileBtn move">Move</button></div>`;
+      // double-click open (special case wallpaper.jpg)
+      fi.addEventListener('dblclick', ()=>{
+        if(name === 'Pictures' && fname.toLowerCase() === 'wallpaper.jpg'){
+          openWallpaperWindow();
+        } else {
+          openFileViewer(fname, files[fname]);
+        }
+      });
+      // open button
+      fi.querySelector('.open').addEventListener('click', ()=> {
+        if(name === 'Pictures' && fname.toLowerCase() === 'wallpaper.jpg'){ openWallpaperWindow(); }
+        else openFileViewer(fname, files[fname]);
+      });
+      // move button toggles a simple select-for-move modal
+      fi.querySelector('.move').addEventListener('click', ()=> {
+        showMoveDialog(name, fname);
+      });
 
-function openWallpaper(){
-  const choice = prompt('Type 1 to upload a file, or 2 to use an image link:');
-  if(choice === '1'){
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/png,image/jpeg';
-    input.onchange = e => {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        document.body.style.background = `url('${reader.result}') center/cover no-repeat`;
-      };
-      reader.readAsDataURL(file);
-    };
-    input.click();
-  } else if(choice === '2'){
-    const link = prompt('Enter image URL:');
-    if(link) document.body.style.background = `url('${link}') center/cover no-repeat`;
+      // drag handlers for file-level DnD (HTML5)
+      fi.addEventListener('dragstart', (ev) => {
+        ev.dataTransfer.setData('text/plain', JSON.stringify({ from: name, file: fname }));
+        ev.dataTransfer.effectAllowed = 'move';
+      });
+
+      fileList.appendChild(fi);
+    });
   }
+
+  // folder-level drop target to move files into
+  folderList.addEventListener('dragover', (ev)=> ev.preventDefault());
+  folderList.addEventListener('drop', (ev)=>{
+    ev.preventDefault();
+    try{
+      const data = JSON.parse(ev.dataTransfer.getData('text/plain'));
+      if(data && data.from && data.file){
+        const targetEl = ev.target.closest('.folderItem');
+        if(targetEl){
+          const targetFolder = targetEl.textContent;
+          moveFile(data.from, targetFolder, data.file);
+          showFolder(activeFolder);
+          renderFolders();
+        }
+      }
+    }catch(e){}
+  });
+
+  function showMoveDialog(from, fname){
+    const choices = Object.keys(fs).filter(k=>k!==from);
+    const pick = prompt('Move "'+fname+'" to which folder? Available: ' + choices.join(', '));
+    if(!pick) return;
+    if(!fs[pick]) return alert('Folder not found: '+pick);
+    moveFile(from, pick, fname);
+    showFolder(activeFolder);
+  }
+  function moveFile(from, to, fileName){
+    if(!fs[from] || !fs[from][fileName]) return;
+    fs[to][fileName] = fs[from][fileName];
+    delete fs[from][fileName];
+    saveJSON(FS_KEY, fs);
+  }
+
+  function openFileViewer(name, contentText){
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `<div style="white-space:pre-wrap;font-family:monospace">${escapeHtml(contentText)}</div>`;
+    createWindow({ title: name, content: wrap, width: 520, height: 360 });
+  }
+
+  // initial render handlers for new file/folder
+  content.querySelector('#new-file').addEventListener('click', ()=>{
+    const nm = prompt('File name (e.g., note.txt)');
+    if(!nm) return;
+    const text = prompt('File content:') || '';
+    if(fs[activeFolder][nm]) return alert('File exists');
+    fs[activeFolder][nm] = text;
+    saveJSON(FS_KEY, fs);
+    showFolder(activeFolder);
+  });
+  content.querySelector('#new-folder').addEventListener('click', ()=>{
+    const nm = prompt('New folder name:');
+    if(!nm) return;
+    if(fs[nm]) return alert('Folder exists');
+    fs[nm] = {};
+    saveJSON(FS_KEY, fs);
+    renderFolders(); showFolder(activeFolder);
+  });
+
+  // handle drop on file list to move files into active folder
+  fileList.addEventListener('dragover', (ev)=> ev.preventDefault());
+  fileList.addEventListener('drop', (ev)=>{
+    ev.preventDefault();
+    try{
+      const data = JSON.parse(ev.dataTransfer.getData('text/plain'));
+      if(data && data.from && data.file){
+        moveFile(data.from, activeFolder, data.file);
+        showFolder(activeFolder);
+      }
+    }catch(e){}
+  });
+
+  // initial
+  renderFolders();
+  showFolder(activeFolder);
 }
+
+/* Wallpaper chooser window (no prompt) */
+function openWallpaperWindow(){
+  const wrapper = document.createElement('div');
+  wrapper.style.display = 'flex'; wrapper.style.flexDirection = 'column'; wrapper.style.gap='8px';
+  wrapper.innerHTML = `
+    <div style="font-weight:700">Change Wallpaper</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="file" id="wall-file" accept="image/jpeg,image/png">
+      <input type="text" id="wall-url" placeholder="Or paste image URL (jpg/png)" style="flex:1;padding:6px;border-radius:6px;border:1px solid #ccc">
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div style="flex:1;height:120px;border-radius:8px;border:1px dashed #ccc;display:flex;align-items:center;justify-content:center" id="wall-preview">Preview</div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button id="wall-cancel" class="fileBtn">Cancel</button>
+      <button id="wall-save" class="fileBtn">Save</button>
+    </div>
+  `;
+  const { win, content } = createWindow({ title: 'Change Wallpaper', content: wrapper, width: 560, height: 360 });
+
+  const fileInput = content.querySelector('#wall-file');
+  const urlInput = content.querySelector('#wall-url');
+  const preview = content.querySelector('#wall-preview');
+  const btnSave = content.querySelector('#wall-save');
+  const btnCancel = content.querySelector('#wall-cancel');
+
+  function setPreview(src){
+    preview.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = src;
+    img.style.maxWidth = '100%';
+    img.style.maxHeight = '100%';
+    preview.appendChild(img);
+    preview.dataset.src = src;
+  }
+
+  // load current wallpaper into preview if exists
+  const saved = loadJSON(WALLPAPER_KEY, null);
+  if(saved) setPreview(saved);
+
+  fileInput.addEventListener('change', (e)=>{
+    const f = e.target.files && e.target.files[0];
+    if(!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPreview(reader.result);
+    };
+    reader.readAsDataURL(f);
+  });
+
+  urlInput.addEventListener('input', (e)=>{
+    const val = e.target.value.trim();
+    if(val) setPreview(val);
+  });
+
+  btnSave.addEventListener('click', ()=>{
+    const src = preview.dataset.src;
+    if(!src) return alert('No image selected');
+    document.documentElement.style.setProperty('--custom-wallpaper','');
+    // set desktop background using layered approach
+    desktop.style.backgroundImage = `url("${src}")`;
+    saveJSON(WALLPAPER_KEY, src);
+    win.remove();
+  });
+  btnCancel.addEventListener('click', ()=> win.remove());
+}
+
+/* Browser app */
+function openBrowser(){
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = `
+    <div style="display:flex;flex-direction:column;height:100%">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input id="addr" placeholder="Enter URL (http(s) optional)" style="flex:1;padding:8px;border-radius:6px;border:1px solid #ccc">
+        <button id="go" class="fileBtn">Go</button>
+      </div>
+      <div style="flex:1"><iframe id="iframe" src="https://example.com" style="width:100%;height:100%;border-radius:6px;border:1px solid #ddd"></iframe></div>
+    </div>
+  `;
+  const { win, content } = createWindow({ title: 'Internet Browser', content: wrapper, width: 900, height: 520 });
+  const addr = content.querySelector('#addr');
+  const go = content.querySelector('#go');
+  const iframe = content.querySelector('#iframe');
+
+  go.addEventListener('click', ()=> {
+    let u = addr.value.trim();
+    if(!u) return;
+    if(!/^https?:\/\//i.test(u)) u = 'https://' + u;
+    iframe.src = u;
+  });
+  addr.addEventListener('keydown', (e)=> { if(e.key === 'Enter') go.click(); });
+}
+
+/* Utilities */
+function escapeHtml(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* initialize wallpaper from storage */
+(function restoreWallpaper(){
+  const wp = loadJSON(WALLPAPER_KEY, null);
+  if(wp){
+    desktop.style.backgroundImage = `url("${wp}")`;
+  } else {
+    // keep gradient default
+    desktop.style.backgroundImage = '';
+  }
+})();
+
+/* initial render */
+renderIcons();
+
+/* Expose helper to reset state in console if needed */
+window.browserOS = {
+  resetPositions(){ positions = {}; saveJSON(DESKTOP_KEY, positions); location.reload(); },
+  resetFS(){ localStorage.removeItem(FS_KEY); location.reload(); },
+  resetWallpaper(){ localStorage.removeItem(WALLPAPER_KEY); location.reload(); }
+};
 </script>
 </body>
 </html>
