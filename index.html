@@ -24,23 +24,9 @@ body{background:black;}
 input,button,textarea{font-size:14px;}
 .loading{border:8px solid #f3f3f3;border-top:8px solid #555;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;margin-top:20px;}
 @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
-.folder-list {
-  list-style-type: none;
-  padding-left: 0;
-  background: #555;
-  color: white;
-  padding: 10px;
-  border-radius: 5px;
-}
-.folder-list li {
-  cursor: pointer;
-  margin: 3px 0;
-  padding: 3px 5px;
-  border-radius: 3px;
-}
-.folder-list li:hover {
-  background: #777;
-}
+.folder-list {list-style-type: none;padding-left: 0;background: #555;color: white;padding: 10px;border-radius: 5px;}
+.folder-list li {cursor: pointer;margin: 3px 0;padding: 3px 5px;border-radius: 3px;}
+.folder-list li:hover {background: #777;}
 .breadcrumbs {margin-bottom:5px;}
 </style>
 </head>
@@ -162,9 +148,7 @@ document.getElementById('submitKey').addEventListener('click',async ()=>{
   }catch(e){ console.error(e); alert("Error fetching keys"); }
 });
 
-document.getElementById('skipKey').addEventListener('click',()=>{
-  activated=false; startDesktop();
-});
+document.getElementById('skipKey').addEventListener('click',()=>{ activated=false; startDesktop(); });
 
 // --- START DESKTOP ---
 function startDesktop(){
@@ -174,14 +158,12 @@ function startDesktop(){
     desktopScreen.style.display='flex';
     desktopScreen.style.opacity=1;
     if(!activated) document.getElementById('watermark').style.display='block';
-
-    // Show imported files on desktop, auto-arranged in grid
     renderDesktopIcons();
   },500);
 }
 
+// --- Render Desktop Icons ---
 function renderDesktopIcons(){
-  // Remove old desktop imported icons
   document.querySelectorAll('#desktopScreen .icon-imported').forEach(el=>el.remove());
   let x = 200, y = 50, counter = 0;
   fileSystem.Downloads.forEach(f=>{
@@ -192,6 +174,7 @@ function renderDesktopIcons(){
       icon.style.top=`${y}px`;
       icon.innerHTML=`<img src="https://img.icons8.com/fluency/48/document.png"/><span>${f.name}</span>`;
       icon.ondblclick=()=>{ createWindow(f.name, `<iframe srcdoc='${f.content.replace(/'/g,"&#39;")}' style='width:100%;height:100%;'></iframe>`); };
+      makeDraggable(icon);
       desktopScreen.appendChild(icon);
       counter++;
       x += 100;
@@ -207,18 +190,13 @@ document.getElementById('shutdownButton').addEventListener('click',()=>{
     desktopScreen.style.display='none';
     const shutdown=document.getElementById('shutdownScreen');
     shutdown.style.display='flex';
-    setTimeout(()=>{
-      shutdown.style.display='none';
-      document.body.style.background='black';
-    },5000);
+    setTimeout(()=>{ shutdown.style.display='none'; document.body.style.background='black'; },5000);
   },500);
 });
 
-// --- DRAG & DROP ICONS ---
-const icons = document.querySelectorAll('#desktopScreen .icon');
-icons.forEach(icon=>{
+// --- DRAG FUNCTION (Reusable) ---
+function makeDraggable(icon){
   icon.onmousedown=function(e){
-    if(icon.id==="iconWallpaper" && !activated){ alert("Enter product key to change wallpaper."); return; }
     let shiftX=e.clientX-icon.getBoundingClientRect().left;
     let shiftY=e.clientY-icon.getBoundingClientRect().top;
     function moveAt(pageX,pageY){ icon.style.left=pageX-shiftX+'px'; icon.style.top=pageY-shiftY+'px'; }
@@ -227,7 +205,10 @@ icons.forEach(icon=>{
     icon.onmouseup=function(){ document.removeEventListener('mousemove',onMouseMove); icon.onmouseup=null; };
   };
   icon.ondragstart=()=>false;
-});
+}
+
+// Make default icons draggable too
+document.querySelectorAll('#desktopScreen .icon').forEach(icon=>makeDraggable(icon));
 
 // --- WALLPAPER ---
 document.getElementById('iconWallpaper').addEventListener('dblclick',()=>{
@@ -238,39 +219,29 @@ document.getElementById('iconWallpaper').addEventListener('dblclick',()=>{
 
 // --- WINDOW CREATION ---
 function createWindow(title, content){
-  const win=document.createElement('div'); win.className='window'; win.style.top='100px'; win.style.left='100px';
-  const header=document.createElement('div'); header.className='window-header';
+  const win=document.createElement('div');
+  win.className='window';
+  win.style.top='100px';
+  win.style.left='100px';
+  const header=document.createElement('div');
+  header.className='window-header';
   header.innerHTML=`<span>${title}</span>`;
-  const buttons=document.createElement('div'); buttons.className='window-buttons';
-
-  // Fullscreen / unfullscreen buttons
-  const fullBtn = document.createElement('button'); fullBtn.textContent='⬜';
-  const unfullBtn = document.createElement('button'); unfullBtn.textContent='❐';
-  buttons.appendChild(fullBtn);
-  buttons.appendChild(unfullBtn);
-
-  const minBtn=document.createElement('button'); minBtn.textContent='—';
-  const closeBtn=document.createElement('button'); closeBtn.textContent='✕';
-  buttons.appendChild(minBtn); buttons.appendChild(closeBtn); header.appendChild(buttons);
+  const buttons=document.createElement('div');
+  buttons.className='window-buttons';
+  const minBtn=document.createElement('button');
+  minBtn.textContent='—';
+  const closeBtn=document.createElement('button');
+  closeBtn.textContent='✕';
+  buttons.appendChild(minBtn);
+  buttons.appendChild(closeBtn);
+  header.appendChild(buttons);
   win.appendChild(header);
-  const contentDiv=document.createElement('div'); contentDiv.className='window-content'; contentDiv.innerHTML=content;
+  const contentDiv=document.createElement('div');
+  contentDiv.className='window-content';
+  contentDiv.innerHTML=content;
   win.appendChild(contentDiv);
   desktopScreen.appendChild(win);
 
-  // Fullscreen / unfullscreen logic
-  let originalStyle = {};
-  fullBtn.addEventListener('click',()=>{
-    originalStyle={top:win.style.top,left:win.style.left,width:win.style.width,height:win.style.height};
-    win.style.top='0'; win.style.left='0'; win.style.width='100%'; win.style.height='100%';
-  });
-  unfullBtn.addEventListener('click',()=>{
-    if(originalStyle.width) {
-      win.style.top=originalStyle.top; win.style.left=originalStyle.left;
-      win.style.width=originalStyle.width; win.style.height=originalStyle.height;
-    }
-  });
-
-  // Drag
   header.onmousedown=function(e){
     let shiftX=e.clientX-win.getBoundingClientRect().left;
     let shiftY=e.clientY-win.getBoundingClientRect().top;
@@ -281,29 +252,13 @@ function createWindow(title, content){
   };
   header.ondragstart=()=>false;
 
-  // Close
-  closeBtn.addEventListener('click',()=>{ win.remove(); });
-
-  // Minimize
-  minBtn.addEventListener('click',()=>{
-    win.style.display='none';
-    const taskbar=document.getElementById('minimizedApps');
-    const tbIcon=document.createElement('button'); tbIcon.textContent=title;
-    tbIcon.addEventListener('click',()=>{
-      win.style.display='flex';
-      taskbar.removeChild(tbIcon);
-    });
-    taskbar.appendChild(tbIcon);
-  });
+  closeBtn.addEventListener('click',()=>win.remove());
+  minBtn.addEventListener('click',()=>{ win.style.display='none'; });
 }
 
 // --- CALCULATOR APP ---
 document.getElementById('iconCalculator').addEventListener('dblclick',()=>{
-  createWindow("Calculator",
-    `<p>Simple Calculator:</p>
-    <input id="calcInput" type="text" style="width:100%;"/><br>
-    <button onclick="document.getElementById('calcInput').value=eval(document.getElementById('calcInput').value)">=</button>`
-  );
+  createWindow("Calculator",`<input id="calcInput" type="text" style="width:100%;"/><br><button onclick="document.getElementById('calcInput').value=eval(document.getElementById('calcInput').value)">=</button>`);
 });
 
 // --- FILE EXPLORER ---
@@ -326,48 +281,51 @@ document.getElementById('iconExplorer').addEventListener('dblclick',()=>{
 });
 
 function createExplorerWindow(title, initialFolder){
-  const win=document.createElement('div'); win.className='window'; win.style.top='100px'; win.style.left='100px';
-  const header=document.createElement('div'); header.className='window-header'; header.innerHTML=`<span>${title}</span>`;
-  const buttons=document.createElement('div'); buttons.className='window-buttons';
-  const minBtn=document.createElement('button'); minBtn.textContent='—';
-  const closeBtn=document.createElement('button'); closeBtn.textContent='✕';
-  buttons.appendChild(minBtn); buttons.appendChild(closeBtn); header.appendChild(buttons);
+  const win=document.createElement('div');
+  win.className='window';
+  win.style.top='100px';
+  win.style.left='100px';
+  const header=document.createElement('div');
+  header.className='window-header';
+  header.innerHTML=`<span>${title}</span>`;
+  const buttons=document.createElement('div');
+  buttons.className='window-buttons';
+  const minBtn=document.createElement('button');
+  minBtn.textContent='—';
+  const closeBtn=document.createElement('button');
+  closeBtn.textContent='✕';
+  buttons.appendChild(minBtn);
+  buttons.appendChild(closeBtn);
+  header.appendChild(buttons);
   win.appendChild(header);
-  const contentDiv=document.createElement('div'); contentDiv.className='window-content';
+  const contentDiv=document.createElement('div');
+  contentDiv.className='window-content';
   win.appendChild(contentDiv);
   desktopScreen.appendChild(win);
 
   let currentFolder = initialFolder;
-
   function refreshContent(){
     contentDiv.innerHTML = renderExplorer(currentFolder);
     const items = contentDiv.querySelectorAll('li');
     items.forEach(item=>{
       item.addEventListener('dblclick',()=>{
-        if(item.classList.contains('folder')){
-          if(fileSystem[item.textContent]){ currentFolder=item.textContent; refreshContent(); }
-        } else if(item.classList.contains('file-import')){
+        if(item.classList.contains('file-import')){
           if(!activated){ alert("Activate BrowserOS to import files."); return; }
           const htmlContent=prompt("Enter HTML content for new file:");
           if(htmlContent){
             const fileName="ImportedFile_"+Date.now()+".html";
             fileSystem.Downloads.push({name:fileName,type:'html',content:htmlContent});
             refreshContent();
-            renderDesktopIcons(); // auto-add to desktop
+            renderDesktopIcons();
           }
         } else if(item.classList.contains('file-html')){
           const file=fileSystem.Downloads.find(f=>f.name===item.textContent);
-          if(file){
-            createWindow(file.name, `<iframe srcdoc='${file.content.replace(/'/g,"&#39;")}' style='width:100%;height:100%;'></iframe>`);
-          }
+          if(file){ createWindow(file.name, `<iframe srcdoc='${file.content.replace(/'/g,"&#39;")}' style='width:100%;height:100%;'></iframe>`); }
         }
       });
     });
   }
-
   refreshContent();
-
-  // Drag
   header.onmousedown=function(e){
     let shiftX=e.clientX-win.getBoundingClientRect().left;
     let shiftY=e.clientY-win.getBoundingClientRect().top;
@@ -377,30 +335,15 @@ function createExplorerWindow(title, initialFolder){
     document.onmouseup=function(){ document.removeEventListener('mousemove',onMouseMove); document.onmouseup=null; };
   };
   header.ondragstart=()=>false;
-
-  // Close
-  closeBtn.addEventListener('click',()=>{ win.remove(); });
-
-  // Minimize
-  minBtn.addEventListener('click',()=>{
-    win.style.display='none';
-    const taskbar=document.getElementById('minimizedApps');
-    const tbIcon=document.createElement('button'); tbIcon.textContent=title;
-    tbIcon.addEventListener('click',()=>{
-      win.style.display='flex';
-      taskbar.removeChild(tbIcon);
-    });
-    taskbar.appendChild(tbIcon);
-  });
+  closeBtn.addEventListener('click',()=>win.remove());
+  minBtn.addEventListener('click',()=>{ win.style.display='none'; });
 }
 
 // --- BROWSER APP ---
 document.getElementById('iconBrowser').addEventListener('dblclick',()=>{
-  createWindow("Internet Browser",
-    `<input id="browserUrl" type="text" placeholder="Enter URL" style="width:80%;" />
-    <button onclick="this.nextElementSibling.src=document.getElementById('browserUrl').value">Go</button>
-    <iframe src="https://example.com" style="width:100%;height:150px;margin-top:5px;"></iframe>`
-  );
+  createWindow("Internet Browser",`<input id="browserUrl" type="text" placeholder="Enter URL" style="width:80%;" />
+  <button onclick="this.nextElementSibling.src=document.getElementById('browserUrl').value">Go</button>
+  <iframe src="https://example.com" style="width:100%;height:150px;margin-top:5px;"></iframe>`);
 });
 </script>
 </body>
