@@ -8,15 +8,13 @@
 html,body{margin:0;padding:0;width:100%;height:100%;font-family:Arial, sans-serif;overflow:hidden;}
 body{background:black;}
 .screen{position:absolute;width:100%;height:100%;display:flex;justify-content:center;align-items:center;transition:opacity 0.5s;}
-#bootScreen,#productKeyScreen,#desktopScreen,#shutdownScreen{display:none;flex-direction:column;color:white;}
+#bootScreen,#productKeyScreen,#desktopScreen,#shutdownScreen{display:none;flex-direction:column;color:white;transition:opacity 0.5s;}
 #bootScreen,#shutdownScreen{background:#111;flex-direction:column;}
 #desktopScreen{background-size:cover;background-position:center;overflow:hidden;background-image:url('https://copilot.microsoft.com/th/id/BCO.99351b73-c924-4ea6-8114-a3d2e0e35372.png');}
 #desktopScreen .icon{width:80px;text-align:center;cursor:grab;position:absolute;}
 #desktopScreen .icon img{width:64px;height:64px;display:block;margin:0 auto;}
 #taskbar{position:absolute;bottom:0;left:0;width:100%;height:40px;background:rgba(0,0,0,0.7);display:flex;align-items:center;padding:0 5px;box-sizing:border-box;}
-#startButton{width:60px;height:30px;background:#444;color:white;cursor:pointer;display:flex;justify-content:center;align-items:center;margin-right:5px;position:relative;}
-.startMenu{position:absolute;bottom:40px;left:0;background:#222;color:white;padding:10px;display:none;flex-direction:column;z-index:10000;}
-.startMenu button{margin:3px 0;}
+#startButton{width:60px;height:30px;background:#444;color:white;cursor:pointer;display:flex;justify-content:center;align-items:center;margin-right:5px;}
 .window{position:absolute;background:#ddd;border:1px solid #888;width:400px;height:300px;box-shadow:2px 2px 10px rgba(0,0,0,0.5);display:flex;flex-direction:column;}
 .window-header{background:#555;color:white;padding:5px;cursor:move;display:flex;justify-content:space-between;align-items:center;}
 .window-content{flex:1;padding:5px;background:#fff;overflow:auto;}
@@ -25,12 +23,12 @@ body{background:black;}
 #clockWidget{position:absolute;top:5px;right:10px;color:white;font-size:16px;pointer-events:none;}
 input,button,textarea{font-size:14px;}
 .loading{border:8px solid #f3f3f3;border-top:8px solid #555;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;margin-top:20px;}
-@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
-.folder-list {list-style-type: none; padding-left: 0; background: #555; color: white; padding: 10px; border-radius: 5px;}
-.folder-list li {cursor: pointer; margin: 3px 0; padding: 3px 5px; border-radius: 3px;}
+@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);} }
+.folder-list { list-style-type: none; padding-left: 0; background: #555; color: white; padding: 10px; border-radius: 5px; }
+.folder-list li { cursor: pointer; margin: 3px 0; padding: 3px 5px; border-radius: 3px; }
+.folder-list li:hover { background: #777; }
 .breadcrumbs {margin-bottom:5px;}
-.file-html img{width:20px;height:20px;vertical-align:middle;margin-right:5px;}
-.file-bof img{width:20px;height:20px;vertical-align:middle;margin-right:5px;}
+textarea.editor {width:100%;height:100%;box-sizing:border-box;font-family:monospace;}
 </style>
 </head>
 <body>
@@ -80,18 +78,14 @@ input,button,textarea{font-size:14px;}
 
   <!-- Taskbar -->
   <div id="taskbar">
-    <div id="startButton">Start
-      <div class="startMenu" id="startMenu">
-        <button id="newBOF">New .bof File</button>
-      </div>
-    </div>
+    <div id="startButton">Start</div>
     <div id="minimizedApps" style="display:flex;"></div>
     <button id="shutdownButton" style="margin-left:auto;">Shutdown</button>
   </div>
 </div>
 
 <!-- Shutdown Screen -->
-<div id="shutdownScreen" class="screen">
+<div id="shutdownScreen" class="screen" style="opacity:0;">
   <h1>BrowserOS</h1>
   <div class="loading"></div>
   <p>Shutting down...</p>
@@ -108,12 +102,13 @@ let fileSystem = {
   Desktop: [],
   Documents: [],
   Downloads: [
-    { name: "Import File", type: "import" }
+    { name: "Import File", type: "import", content: "<p>HTML Content</p>" }
   ],
   Pictures: []
 };
 
 const desktopScreen = document.getElementById('desktopScreen');
+const recycleIcon = document.getElementById('iconRecycle');
 let minimizedWindows = [];
 
 // --- CLOCK ---
@@ -127,19 +122,14 @@ function updateClock(){
 setInterval(updateClock,1000);
 updateClock();
 
-// --- BOOT ---
+// --- BOOT SEQUENCE ---
 document.getElementById('bootScreen').style.display='flex';
 setTimeout(()=>{
-  const boot = document.getElementById('bootScreen');
-  boot.style.transition='opacity 0.5s';
-  boot.style.opacity=0;
+  document.getElementById('bootScreen').style.opacity=0;
   setTimeout(()=>{
-    boot.style.display='none';
-    const pk = document.getElementById('productKeyScreen');
-    pk.style.display='flex';
-    pk.style.opacity=0;
-    pk.style.transition='opacity 0.5s';
-    setTimeout(()=>{ pk.style.opacity=1; },50);
+    document.getElementById('bootScreen').style.display='none';
+    document.getElementById('productKeyScreen').style.display='flex';
+    document.getElementById('productKeyScreen').style.opacity=1;
   },500);
 },7000);
 
@@ -160,206 +150,143 @@ document.getElementById('submitKey').addEventListener('click',async ()=>{
   }catch(e){ console.error(e); alert("Error fetching keys"); }
 });
 
-document.getElementById('skipKey').addEventListener('click',()=>{ activated=false; startDesktop(); });
+document.getElementById('skipKey').addEventListener('click',()=>{
+  activated=false; startDesktop();
+});
 
 // --- START DESKTOP ---
 function startDesktop(){
-  const productKeyScreen = document.getElementById('productKeyScreen');
-  desktopScreen.style.display='flex';
-  desktopScreen.style.opacity=0;
-  desktopScreen.style.transition='opacity 0.5s';
-  productKeyScreen.style.transition='opacity 0.5s';
-  productKeyScreen.style.opacity=0;
+  document.getElementById('productKeyScreen').style.opacity=0;
   setTimeout(()=>{
-    productKeyScreen.style.display='none';
+    document.getElementById('productKeyScreen').style.display='none';
+    desktopScreen.style.display='flex';
     desktopScreen.style.opacity=1;
     if(!activated) document.getElementById('watermark').style.display='block';
     renderDesktopIcons();
-    attachDesktopIconListeners();
   },500);
 }
 
-// --- RENDER DESKTOP ICONS ---
+// --- DESKTOP ICONS ---
 function renderDesktopIcons(){
-  document.querySelectorAll('#desktopScreen .icon-imported').forEach(el=>el.remove());
-  let x = 200, y = 50, counter = 0;
+  document.querySelectorAll('#desktopScreen .icon-imported, #desktopScreen .icon-bof').forEach(el=>el.remove());
+  let x=200, y=50, counter=0;
   fileSystem.Downloads.forEach(f=>{
     if(f.type==='html'){
       const icon=document.createElement('div');
       icon.className='icon icon-imported';
       icon.style.left=`${x}px`; icon.style.top=`${y}px`;
       icon.innerHTML=`<img src="https://img.icons8.com/fluency/48/document.png"/><span>${f.name}</span>`;
-      icon.ondblclick=()=>{ createWindow(f.name, `<iframe srcdoc='${f.content.replace(/'/g,"&#39;")}' style='width:100%;height:100%;'></iframe>`); };
+      icon.ondblclick=()=>{ openTextEditor(f,'html'); };
       desktopScreen.appendChild(icon);
+      makeDraggable(icon,f);
+      counter++; x+=100; if(counter%5===0){ x=200; y+=100; }
     } else if(f.type==='bof'){
       const icon=document.createElement('div');
-      icon.className='icon icon-imported';
+      icon.className='icon icon-bof';
       icon.style.left=`${x}px`; icon.style.top=`${y}px`;
-      icon.innerHTML=`<img src="https://img.icons8.com/color/48/code.png"/><span>${f.name}</span>`;
-      icon.ondblclick=()=>{ createWindow(f.name, `<iframe srcdoc='${f.content.replace(/'/g,"&#39;")}' style='width:100%;height:100%;'></iframe>`); };
+      icon.innerHTML=`<img src="https://img.icons8.com/fluency/48/code.png"/><span>${f.name}</span>`;
+      icon.ondblclick=()=>{ openTextEditor(f,'bof'); };
       desktopScreen.appendChild(icon);
+      makeDraggable(icon,f);
+      counter++; x+=100; if(counter%5===0){ x=200; y+=100; }
     }
-    counter++;
-    x += 100; if(counter%5===0){ x=200; y+=100; }
   });
 }
 
-// --- START MENU & NEW .BOF ---
-const startButton = document.getElementById('startButton');
-const startMenu = document.getElementById('startMenu');
-startButton.onclick = ()=> startMenu.style.display=startMenu.style.display==='flex'?'none':'flex';
-document.getElementById('newBOF').onclick=()=>{
+// --- DRAGGABLE ---
+function makeDraggable(icon,file){
+  icon.onmousedown=function(e){
+    let shiftX=e.clientX-icon.getBoundingClientRect().left;
+    let shiftY=e.clientY-icon.getBoundingClientRect().top;
+    function moveAt(pageX,pageY){ icon.style.left=pageX-shiftX+'px'; icon.style.top=pageY-shiftY+'px'; }
+    function onMouseMove(e){ moveAt(e.pageX,e.pageY); }
+    document.addEventListener('mousemove',onMouseMove);
+    icon.onmouseup=function(){
+      document.removeEventListener('mousemove',onMouseMove); icon.onmouseup=null;
+      const rect=recycleIcon.getBoundingClientRect();
+      const iconRect=icon.getBoundingClientRect();
+      if(!(iconRect.right<rect.left||iconRect.left>rect.right||iconRect.bottom<rect.top||iconRect.top>rect.bottom)){
+        fileSystem.Downloads=fileSystem.Downloads.filter(f=>f!==file);
+        icon.remove();
+      }
+    };
+  };
+  icon.ondragstart=()=>false;
+}
+
+// --- TEXT EDITOR ---
+function openTextEditor(file,type){
+  const win=document.createElement('div'); win.className='window'; win.style.top='100px'; win.style.left='100px';
+  const header=document.createElement('div'); header.className='window-header'; header.innerHTML=`<span>${file.name}</span>`;
+  const buttons=document.createElement('div'); buttons.className='window-buttons';
+  const minBtn=document.createElement('button'); minBtn.textContent='—';
+  const closeBtn=document.createElement('button'); closeBtn.textContent='✕';
+  buttons.appendChild(minBtn); buttons.appendChild(closeBtn); header.appendChild(buttons); win.appendChild(header);
+  const contentDiv=document.createElement('div'); contentDiv.className='window-content';
+  const editor=document.createElement('textarea'); editor.className='editor'; editor.value=file.content||'';
+  contentDiv.appendChild(editor);
+  const saveBtn=document.createElement('button'); saveBtn.textContent='Save'; contentDiv.appendChild(saveBtn);
+  saveBtn.onclick=()=>{ file.content=editor.value; renderDesktopIcons(); };
+  win.appendChild(contentDiv); desktopScreen.appendChild(win);
+
+  header.onmousedown=function(e){
+    let shiftX=e.clientX-win.getBoundingClientRect().left;
+    let shiftY=e.clientY-win.getBoundingClientRect().top;
+    function moveAt(pageX,pageY){ win.style.left=pageX-shiftX+'px'; win.style.top=pageY-shiftY+'px'; }
+    function onMouseMove(e){ moveAt(e.pageX,e.pageY); }
+    document.addEventListener('mousemove',onMouseMove);
+    document.onmouseup=function(){ document.removeEventListener('mousemove',onMouseMove); document.onmouseup=null; };
+  };
+  header.ondragstart=()=>false;
+
+  closeBtn.addEventListener('click',()=>{ win.remove(); });
+  minBtn.addEventListener('click',()=>{
+    win.style.display='none';
+    const tbIcon=document.createElement('button'); tbIcon.textContent=file.name;
+    tbIcon.addEventListener('click',()=>{ win.style.display='flex'; tbIcon.remove(); });
+    document.getElementById('minimizedApps').appendChild(tbIcon);
+  });
+}
+
+// --- START BUTTON BOF ---
+document.getElementById('startButton').addEventListener('click',()=>{
   if(!activated){ alert("Activate BrowserOS to create .bof files."); return; }
-  const content = prompt("Enter HTML content for .bof file:");
-  if(content){
-    const fileName = "NewFile_"+Date.now()+".bof";
-    fileSystem.Downloads.push({name:fileName,type:'bof',content});
-    renderDesktopIcons();
-    attachDesktopIconListeners();
-  }
-};
+  const fileName="NewFile_"+Date.now()+".bof";
+  const newFile={name:fileName,type:'bof',content:''};
+  fileSystem.Downloads.push(newFile);
+  renderDesktopIcons();
+});
 
 // --- SHUTDOWN ---
-document.getElementById('shutdownButton').onclick = () => {
-  desktopScreen.style.transition = 'opacity 0.5s';
-  desktopScreen.style.opacity = 0;
+document.getElementById('shutdownButton').addEventListener('click',()=>{
+  desktopScreen.style.opacity=0;
   setTimeout(()=>{
     desktopScreen.style.display='none';
-    const shutdown = document.getElementById('shutdownScreen');
+    const shutdown=document.getElementById('shutdownScreen');
     shutdown.style.display='flex';
-    shutdown.style.opacity=0;
-    shutdown.style.transition='opacity 0.5s';
-    setTimeout(()=>shutdown.style.opacity=1,50);
-    setTimeout(()=>{
-      shutdown.style.transition='opacity 1s';
-      shutdown.style.opacity=0;
-      setTimeout(()=>document.body.style.background='black',1000);
-    },5000);
+    setTimeout(()=>{ shutdown.style.opacity=1; },50);
+    setTimeout(()=>{ shutdown.style.opacity=0; document.body.style.background='black'; },5000);
   },500);
-};
-
-// --- DRAG & DROP ICONS ---
-function attachDesktopIconListeners(){
-  const icons = document.querySelectorAll('#desktopScreen .icon, #desktopScreen .icon-imported');
-  icons.forEach(icon=>{
-    icon.onmousedown=function(e){
-      if(icon.id==="iconWallpaper" && !activated){ alert("Enter product key to change wallpaper."); return; }
-      let shiftX=e.clientX-icon.getBoundingClientRect().left;
-      let shiftY=e.clientY-icon.getBoundingClientRect().top;
-      function moveAt(pageX,pageY){ icon.style.left=pageX-shiftX+'px'; icon.style.top=pageY-shiftY+'px'; }
-      function onMouseMove(e){ moveAt(e.pageX,e.pageY); }
-      document.addEventListener('mousemove',onMouseMove);
-      icon.onmouseup=function(){
-        const bin = document.getElementById('iconRecycle').getBoundingClientRect();
-        const iconRect = icon.getBoundingClientRect();
-        if((iconRect.left>bin.left && iconRect.right<bin.right)&&(iconRect.top>bin.top && iconRect.bottom<bin.bottom)&&(icon.classList.contains('icon-imported'))){
-          const index = fileSystem.Downloads.findIndex(f=>f.name===icon.querySelector('span').textContent);
-          if(index!==-1) fileSystem.Downloads.splice(index,1);
-          icon.remove();
-        }
-        document.removeEventListener('mousemove',onMouseMove);
-        icon.onmouseup=null;
-      };
-    };
-    icon.ondragstart=()=>false;
-  });
-}
-
-// --- WALLPAPER ---
-document.getElementById('iconWallpaper').addEventListener('dblclick',()=>{
-  if(!activated) return;
-  const url=prompt("Enter image URL or leave blank to upload a local file:");
-  if(url) desktopScreen.style.backgroundImage=`url(${url})`;
 });
-
-// --- GENERIC WINDOW CREATOR ---
-function createWindow(title,contentHTML){
-  const win=document.createElement('div'); win.className='window'; win.style.top='120px'; win.style.left='120px';
-  const header=document.createElement('div'); header.className='window-header'; header.innerHTML=`<span>${title}</span>`;
-  const buttons=document.createElement('div'); buttons.className='window-buttons';
-  const minBtn=document.createElement('button'); minBtn.textContent='—';
-  const closeBtn=document.createElement('button'); closeBtn.textContent='✕';
-  buttons.appendChild(minBtn); buttons.appendChild(closeBtn); header.appendChild(buttons);
-  win.appendChild(header);
-  const contentDiv=document.createElement('div'); contentDiv.className='window-content'; contentDiv.innerHTML=contentHTML;
-  win.appendChild(contentDiv);
-  desktopScreen.appendChild(win);
-
-  header.onmousedown=function(e){
-    let shiftX=e.clientX-win.getBoundingClientRect().left;
-    let shiftY=e.clientY-win.getBoundingClientRect().top;
-    function moveAt(pageX,pageY){ win.style.left=pageX-shiftX+'px'; win.style.top=pageY-shiftY+'px'; }
-    function onMouseMove(e){ moveAt(e.pageX,e.pageY); }
-    document.addEventListener('mousemove',onMouseMove);
-    document.onmouseup=function(){ document.removeEventListener('mousemove',onMouseMove); document.onmouseup=null; };
-  };
-  header.ondragstart=()=>false;
-
-  closeBtn.addEventListener('click',()=>win.remove());
-  minBtn.addEventListener('click',()=>{
-    win.style.display='none';
-    const tbIcon=document.createElement('button'); tbIcon.textContent=title;
-    tbIcon.onclick=()=>{win.style.display='flex'; tbIcon.remove();};
-    document.getElementById('minimizedApps').appendChild(tbIcon);
-  });
-}
 
 // --- CALCULATOR APP ---
-document.getElementById('iconCalculator').addEventListener('dblclick',()=>{
-  createWindow("Calculator",
-    `<p>Simple Calculator:</p>
-    <input id="calcInput" type="text" style="width:100%;"/><br>
-    <button onclick="document.getElementById('calcInput').value=eval(document.getElementById('calcInput').value)">=</button>`
-  );
-});
-
-// --- FILE EXPLORER ---
-function renderExplorer(path){
-  const folder=fileSystem[path];
-  let html=`<div class="breadcrumbs">Current folder: ${path}</div>`;
-  html+='<ul class="folder-list">';
-  folder.forEach(f=>{
-    if(f.type==='import') html+=`<li class="file-import"><img src="https://img.icons8.com/fluency/20/document.png"/>${f.name}</li>`;
-    else if(f.type==='html') html+=`<li class="file-html"><img src="https://img.icons8.com/fluency/20/document.png"/>${f.name}</li>`;
-    else if(f.type==='bof') html+=`<li class="file-bof"><img src="https://img.icons8.com/color/20/code.png"/>${f.name}</li>`;
-    else html+=`<li class="folder">${f.name}</li>`;
-  });
-  html+='</ul>';
-  return html;
-}
-
-document.getElementById('iconExplorer').addEventListener('dblclick',()=>{
-  if(!activated){ alert("Activate BrowserOS to use File Explorer."); return; }
-  createExplorerWindow("File Explorer", "Downloads");
-});
-
-function createExplorerWindow(title, initialFolder){
+document.getElementById('iconCalculator').ondblclick=()=>{
   const win=document.createElement('div'); win.className='window'; win.style.top='100px'; win.style.left='100px';
-  const header=document.createElement('div'); header.className='window-header'; header.innerHTML=`<span>${title}</span>`;
+  const header=document.createElement('div'); header.className='window-header'; header.innerHTML=`<span>Calculator</span>`;
   const buttons=document.createElement('div'); buttons.className='window-buttons';
   const minBtn=document.createElement('button'); minBtn.textContent='—';
   const closeBtn=document.createElement('button'); closeBtn.textContent='✕';
-  buttons.appendChild(minBtn); buttons.appendChild(closeBtn); header.appendChild(buttons);
-  win.appendChild(header);
+  buttons.appendChild(minBtn); buttons.appendChild(closeBtn); header.appendChild(buttons); win.appendChild(header);
   const contentDiv=document.createElement('div'); contentDiv.className='window-content';
-  win.appendChild(contentDiv);
-  desktopScreen.appendChild(win);
+  contentDiv.innerHTML=`<p>Simple Calculator:</p>
+    <input id="calcInput" type="text" placeholder="Enter expression"/><button id="calcBtn">Calculate</button>
+    <div id="calcResult"></div>`;
+  win.appendChild(contentDiv); desktopScreen.appendChild(win);
 
-  let currentFolder = initialFolder;
-
-  function refreshContent(){
-    contentDiv.innerHTML = renderExplorer(currentFolder);
-    const items = contentDiv.querySelectorAll('li');
-    items.forEach(item=>{
-      item.addEventListener('dblclick',()=>{
-        const file = fileSystem.Downloads.find(f=>f.name===item.textContent);
-        if(item.classList.contains('folder') && fileSystem[item.textContent]){ currentFolder=item.textContent; refreshContent(); }
-        else if(file){ createWindow(file.name, `<iframe srcdoc='${file.content.replace(/'/g,"&#39;")}' style='width:100%;height:100%;'></iframe>`); }
-      });
-    });
-  }
-
-  refreshContent();
+  document.getElementById('calcBtn').onclick=()=>{
+    const val=document.getElementById('calcInput').value;
+    try{ document.getElementById('calcResult').innerText=eval(val); }catch(e){ document.getElementById('calcResult').innerText='Error'; }
+  };
 
   header.onmousedown=function(e){
     let shiftX=e.clientX-win.getBoundingClientRect().left;
@@ -370,23 +297,51 @@ function createExplorerWindow(title, initialFolder){
     document.onmouseup=function(){ document.removeEventListener('mousemove',onMouseMove); document.onmouseup=null; };
   };
   header.ondragstart=()=>false;
-  closeBtn.addEventListener('click',()=>win.remove());
+  closeBtn.addEventListener('click',()=>{ win.remove(); });
   minBtn.addEventListener('click',()=>{
     win.style.display='none';
-    const tbIcon=document.createElement('button'); tbIcon.textContent=title;
-    tbIcon.onclick=()=>{win.style.display='flex'; tbIcon.remove();};
+    const tbIcon=document.createElement('button'); tbIcon.textContent='Calculator';
+    tbIcon.addEventListener('click',()=>{ win.style.display='flex'; tbIcon.remove(); });
     document.getElementById('minimizedApps').appendChild(tbIcon);
   });
-}
+};
 
 // --- BROWSER APP ---
-document.getElementById('iconBrowser').addEventListener('dblclick',()=>{
-  createWindow("Internet Browser",
-    `<input id="browserUrl" type="text" placeholder="Enter URL" style="width:80%;" />
-    <button onclick="this.nextElementSibling.src=document.getElementById('browserUrl').value">Go</button>
-    <iframe src="https://example.com" style="width:100%;height:150px;margin-top:5px;"></iframe>`
-  );
-});
+document.getElementById('iconBrowser').ondblclick=()=>{
+  const win=document.createElement('div'); win.className='window'; win.style.top='120px'; win.style.left='150px';
+  const header=document.createElement('div'); header.className='window-header'; header.innerHTML=`<span>Browser</span>`;
+  const buttons=document.createElement('div'); buttons.className='window-buttons';
+  const minBtn=document.createElement('button'); minBtn.textContent='—';
+  const closeBtn=document.createElement('button'); closeBtn.textContent='✕';
+  buttons.appendChild(minBtn); buttons.appendChild(closeBtn); header.appendChild(buttons); win.appendChild(header);
+  const contentDiv=document.createElement('div'); contentDiv.className='window-content';
+  contentDiv.innerHTML=`<input id="urlInput" type="text" placeholder="Enter URL" style="width:80%"/><button id="goBtn">Go</button>
+  <iframe id="browserFrame" style="width:100%;height:90%;margin-top:5px;"></iframe>`;
+  win.appendChild(contentDiv); desktopScreen.appendChild(win);
+
+  document.getElementById('goBtn').onclick=()=>{
+    const url=document.getElementById('urlInput').value.trim();
+    if(!url.startsWith('http')) url='https://'+url;
+    document.getElementById('browserFrame').src=url;
+  };
+
+  header.onmousedown=function(e){
+    let shiftX=e.clientX-win.getBoundingClientRect().left;
+    let shiftY=e.clientY-win.getBoundingClientRect().top;
+    function moveAt(pageX,pageY){ win.style.left=pageX-shiftX+'px'; win.style.top=pageY-shiftY+'px'; }
+    function onMouseMove(e){ moveAt(e.pageX,e.pageY); }
+    document.addEventListener('mousemove',onMouseMove);
+    document.onmouseup=function(){ document.removeEventListener('mousemove',onMouseMove); document.onmouseup=null; };
+  };
+  header.ondragstart=()=>false;
+  closeBtn.addEventListener('click',()=>{ win.remove(); });
+  minBtn.addEventListener('click',()=>{
+    win.style.display='none';
+    const tbIcon=document.createElement('button'); tbIcon.textContent='Browser';
+    tbIcon.addEventListener('click',()=>{ win.style.display='flex'; tbIcon.remove(); });
+    document.getElementById('minimizedApps').appendChild(tbIcon);
+  });
+};
 </script>
 </body>
 </html>
