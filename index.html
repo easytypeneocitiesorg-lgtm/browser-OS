@@ -137,7 +137,7 @@ document.getElementById('submitKey').addEventListener('click',async ()=>{
   const key=document.getElementById('productKeyInput').value.trim();
   if(!key){ alert("Enter a key!"); return; }
   try{
-    const keysResp=await fetch('https://github.com/easytypeneocitiesorg-lgtm/browser-OS/raw/refs/heads/main/keys.txt');
+    const keysResp = await fetch('https://raw.githack.com/easytypeneocitiesorg-lgtm/browser-OS/main/keys.txt');
     const keysTxt=await keysResp.text();
     const keys=keysTxt.split('/').map(k=>k.trim()).filter(Boolean);
     if(!keys.includes(key)){ alert("Key not found"); return; }
