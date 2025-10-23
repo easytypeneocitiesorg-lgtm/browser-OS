@@ -5,24 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BrowserOS</title>
 <style>
-html, body { margin:0; padding:0; width:100%; height:100%; font-family: Arial, sans-serif; overflow:hidden; }
-body { background:black; }
-.screen { position:absolute; width:100%; height:100%; display:flex; justify-content:center; align-items:center; transition: opacity 0.5s; }
-#bootScreen, #productKeyScreen, #desktopScreen, #shutdownScreen { display:none; flex-direction:column; color:white; }
-#bootScreen, #shutdownScreen { background:#111; flex-direction:column; }
-#desktopScreen { background-size:cover; background-position:center; overflow:hidden; display:none; }
-#desktopScreen .icon { width:80px; text-align:center; cursor:grab; position:absolute; }
-#desktopScreen .icon img { width:64px; height:64px; display:block; margin:0 auto; }
-#taskbar { position:absolute; bottom:0; left:0; width:100%; height:40px; background:rgba(0,0,0,0.7); display:flex; align-items:center; padding:0 5px; box-sizing:border-box; }
-#startButton { width:60px; height:30px; background:#444; color:white; cursor:pointer; display:flex; justify-content:center; align-items:center; margin-right:5px; }
-.window { position:absolute; background:#ddd; border:1px solid #888; width:300px; height:200px; box-shadow:2px 2px 10px rgba(0,0,0,0.5); display:flex; flex-direction:column; }
-.window-header { background:#555; color:white; padding:5px; cursor:move; display:flex; justify-content:space-between; align-items:center; }
-.window-content { flex:1; padding:5px; background:#fff; overflow:auto; }
-.window-buttons button { margin-left:2px; }
-#watermark { position:absolute; bottom:10px; right:10px; color: rgba(128,128,128,0.6); font-size:20px; pointer-events:none; z-index:9999; display:none; }
-input, button { font-size:14px; }
-.loading { border: 8px solid #f3f3f3; border-top: 8px solid #555; border-radius: 50%; width:50px; height:50px; animation: spin 1s linear infinite; margin-top:20px; }
-@keyframes spin { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+html,body{margin:0;padding:0;width:100%;height:100%;font-family:Arial, sans-serif;overflow:hidden;}
+body{background:black;}
+.screen{position:absolute;width:100%;height:100%;display:flex;justify-content:center;align-items:center;transition:opacity 0.5s;}
+#bootScreen,#productKeyScreen,#desktopScreen,#shutdownScreen{display:none;flex-direction:column;color:white;}
+#bootScreen,#shutdownScreen{background:#111;flex-direction:column;}
+#desktopScreen{background-size:cover;background-position:center;overflow:hidden;}
+#desktopScreen .icon{width:80px;text-align:center;cursor:grab;position:absolute;}
+#desktopScreen .icon img{width:64px;height:64px;display:block;margin:0 auto;}
+#taskbar{position:absolute;bottom:0;left:0;width:100%;height:40px;background:rgba(0,0,0,0.7);display:flex;align-items:center;padding:0 5px;box-sizing:border-box;}
+#startButton{width:60px;height:30px;background:#444;color:white;cursor:pointer;display:flex;justify-content:center;align-items:center;margin-right:5px;}
+.window{position:absolute;background:#ddd;border:1px solid #888;width:400px;height:300px;box-shadow:2px 2px 10px rgba(0,0,0,0.5);display:flex;flex-direction:column;}
+.window-header{background:#555;color:white;padding:5px;cursor:move;display:flex;justify-content:space-between;align-items:center;}
+.window-content{flex:1;padding:5px;background:#fff;overflow:auto;}
+.window-buttons button{margin-left:2px;}
+#watermark{position:absolute;bottom:10px;right:10px;color: rgba(128,128,128,0.6);font-size:20px;pointer-events:none;z-index:9999;display:none;}
+input,button,textarea{font-size:14px;}
+.loading{border:8px solid #f3f3f3;border-top:8px solid #555;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;margin-top:20px;}
+@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+.folder-list li{cursor:pointer;margin:3px 0;}
 </style>
 </head>
 <body>
@@ -46,6 +47,8 @@ input, button { font-size:14px; }
 <!-- Desktop -->
 <div id="desktopScreen" class="screen">
   <div id="watermark">Activate BrowserOS</div>
+
+  <!-- Icons -->
   <div class="icon" id="iconCalculator" style="top:50px; left:50px;">
     <img src="https://img.icons8.com/fluency/48/calculator.png" />
     <span>Calculator</span>
@@ -85,8 +88,18 @@ input, button { font-size:14px; }
 <script>
 let productKeyValid = false;
 const validKey = "EXAMPLE.PRODUCT.KEY.VALUE";
-const icons = document.querySelectorAll('#desktopScreen .icon');
+const desktopScreen = document.getElementById('desktopScreen');
 let minimizedWindows = [];
+
+// Simple file system
+let fileSystem = {
+  Desktop: [],
+  Documents: [],
+  Downloads: [
+    { name: "Import File", type: "import" }
+  ],
+  Pictures: []
+};
 
 // Boot sequence
 document.getElementById('bootScreen').style.display='flex';
@@ -112,23 +125,28 @@ function startDesktop(){
   document.getElementById('productKeyScreen').style.opacity=0;
   setTimeout(()=>{
     document.getElementById('productKeyScreen').style.display='none';
-    document.getElementById('desktopScreen').style.display='flex';
-    document.getElementById('desktopScreen').style.opacity=1;
+    desktopScreen.style.display='flex';
+    desktopScreen.style.opacity=1;
     if(!productKeyValid) document.getElementById('watermark').style.display='block';
   },500);
 }
 
 // Shutdown
 document.getElementById('shutdownButton').addEventListener('click',()=>{
-  document.getElementById('desktopScreen').style.opacity=0;
+  desktopScreen.style.opacity=0;
   setTimeout(()=>{
-    document.getElementById('desktopScreen').style.display='none';
-    document.getElementById('shutdownScreen').style.display='flex';
-    setTimeout(()=>{},5000);
+    desktopScreen.style.display='none';
+    const shutdown=document.getElementById('shutdownScreen');
+    shutdown.style.display='flex';
+    setTimeout(()=>{
+      shutdown.style.display='none';
+      document.body.style.background='black';
+    },5000);
   },500);
 });
 
-// Drag & Drop
+// Drag & Drop icons
+const icons = document.querySelectorAll('#desktopScreen .icon');
 icons.forEach(icon=>{
   icon.onmousedown=function(e){
     if(icon.id==="iconWallpaper" && !productKeyValid){ alert("Enter product key to change wallpaper."); return; }
@@ -142,14 +160,14 @@ icons.forEach(icon=>{
   icon.ondragstart=()=>false;
 });
 
-// Wallpaper change
+// Wallpaper
 document.getElementById('iconWallpaper').addEventListener('dblclick',()=>{
   if(!productKeyValid) return;
   const url=prompt("Enter image URL or leave blank to upload a local file:");
-  if(url) document.getElementById('desktopScreen').style.backgroundImage=`url(${url})`;
+  if(url) desktopScreen.style.backgroundImage=`url(${url})`;
 });
 
-// Windows
+// Window creation
 function createWindow(title, content){
   const win=document.createElement('div'); win.className='window'; win.style.top='100px'; win.style.left='100px';
   const header=document.createElement('div'); header.className='window-header';
@@ -161,7 +179,7 @@ function createWindow(title, content){
   win.appendChild(header);
   const contentDiv=document.createElement('div'); contentDiv.className='window-content'; contentDiv.innerHTML=content;
   win.appendChild(contentDiv);
-  document.getElementById('desktopScreen').appendChild(win);
+  desktopScreen.appendChild(win);
 
   // Drag
   header.onmousedown=function(e){
@@ -190,7 +208,7 @@ function createWindow(title, content){
   });
 }
 
-// Functional apps
+// Apps
 document.getElementById('iconCalculator').addEventListener('dblclick',()=>{
   createWindow("Calculator",
     `<p>Simple Calculator:</p>
@@ -198,21 +216,45 @@ document.getElementById('iconCalculator').addEventListener('dblclick',()=>{
     <button onclick="document.getElementById('calcInput').value=eval(document.getElementById('calcInput').value)">=</button>`
   );
 });
+
+function renderExplorer(path){
+  const folder=fileSystem[path];
+  let html='<ul class="folder-list">';
+  folder.forEach(f=>{
+    if(f.type==='import') html+=`<li class="file-import">${f.name}</li>`;
+    else if(f.type==='html') html+=`<li class="file-html">${f.name}</li>`;
+    else html+=`<li class="folder">${f.name}</li>`;
+  });
+  html+='</ul>';
+  return html;
+}
+
 document.getElementById('iconExplorer').addEventListener('dblclick',()=>{
-  createWindow("File Explorer",
-    `<p>Folders:</p>
-    <ul>
-      <li>Desktop</li>
-      <li>Documents</li>
-      <li>Downloads</li>
-    </ul>`
-  );
+  createWindow("File Explorer", renderExplorer("Downloads"));
+  const lastWin = desktopScreen.querySelectorAll('.window:last-child .window-content')[0];
+  lastWin.addEventListener('dblclick',e=>{
+    if(e.target.classList.contains('file-import')){
+      const htmlContent=prompt("Enter HTML content for new file:");
+      if(htmlContent){
+        const fileName="ImportedFile_"+Date.now()+".html";
+        fileSystem.Downloads.push({name:fileName,type:'html',content:htmlContent});
+        lastWin.innerHTML=renderExplorer("Downloads");
+      }
+    } else if(e.target.classList.contains('file-html')){
+      const file=fileSystem.Downloads.find(f=>f.name===e.target.textContent);
+      if(file){
+        createWindow(file.name, `<iframe srcdoc='${file.content.replace(/'/g,"&#39;")}' style='width:100%;height:100%;'></iframe>`);
+      }
+    }
+  });
 });
+
+// Browser
 document.getElementById('iconBrowser').addEventListener('dblclick',()=>{
   createWindow("Internet Browser",
     `<input id="browserUrl" type="text" placeholder="Enter URL" style="width:80%;" />
-    <button onclick="document.getElementById('browserFrame').src=document.getElementById('browserUrl').value">Go</button>
-    <iframe id="browserFrame" src="https://example.com" style="width:100%;height:150px;margin-top:5px;"></iframe>`
+    <button onclick="this.nextElementSibling.src=document.getElementById('browserUrl').value">Go</button>
+    <iframe src="https://example.com" style="width:100%;height:150px;margin-top:5px;"></iframe>`
   );
 });
 </script>
