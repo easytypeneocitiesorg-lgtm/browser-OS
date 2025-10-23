@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>BrowserOS — Single File</title>
+<title>BrowserOS</title>
 <style>
   :root{
     --accent:#2b7cff;
@@ -12,272 +12,326 @@
     --glass: rgba(255,255,255,0.06);
     --shadow: 0 10px 30px rgba(2,6,23,0.55);
   }
-  html,body{height:100%;margin:0;font-family:Segoe UI, Roboto, system-ui, -apple-system, 'Helvetica Neue', Arial;background:#0b3b6b}
-  /* Desktop */
-  .desktop{
-    height:100%;width:100%;overflow:hidden;position:relative;user-select:none;
-    display:flex;align-items:flex-start;justify-content:flex-start;padding:18px;
-    background: radial-gradient(circle at 10% 20%, rgba(255,255,255,0.04), transparent 8%),
-               linear-gradient(180deg,#0e4aad 0%, #3a7bd5 40%, #0b3b6b 100%);
-    background-size:cover;background-position:center;
-  }
-  .overlay-gradient{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(180deg,rgba(255,255,255,0.02),transparent 30%)}
-  /* icons */
-  .icons{display:flex;flex-wrap:wrap;gap:18px;z-index:2}
-  .icon{width:88px;text-align:center;color:#fff;cursor:grab;user-select:none;position:relative}
+  html,body{height:100%;margin:0;font-family:Segoe UI, Roboto, system-ui,-apple-system,'Helvetica Neue',Arial;background:#0b3b6b;overflow:hidden}
+  /* boot / product screens */
+  .overlayScreen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#050810;color:#fff;z-index:9999;flex-direction:column;transition:opacity .5s ease}
+  .hidden{display:none}
+  .logo{font-size:34px;font-weight:700;margin-bottom:12px}
+  .loader{width:48px;height:48px;border-radius:50%;border:5px solid rgba(255,255,255,0.12);border-top-color:var(--accent);animation:spin 1s linear infinite;margin-bottom:12px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .card{background:rgba(255,255,255,0.03);padding:18px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);width:420px;box-sizing:border-box;text-align:center}
+  .input{width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;margin-top:8px;box-sizing:border-box}
+  .btn{padding:8px 12px;border-radius:6px;border:0;background:var(--accent);color:#fff;cursor:pointer;margin:6px}
+  .ghost{background:transparent;border:1px solid rgba(255,255,255,0.15);color:#fff}
+  /* desktop */
+  .desktop{height:100%;width:100%;position:relative;user-select:none;display:flex;align-items:flex-start;justify-content:flex-start;padding:18px;z-index:1}
+  .desktop-gradient{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 10% 20%, rgba(255,255,255,0.04), transparent 8%), linear-gradient(180deg,#0e4aad 0%, #3a7bd5 40%, #0b3b6b 100%);background-size:cover}
+  .icons{display:block;z-index:2}
+  .icon{width:88px;text-align:center;color:#fff;cursor:grab;user-select:none;position:absolute}
   .icon img{width:48px;height:48px;display:block;margin:0 auto 6px;border-radius:8px;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.6))}
   .icon .label{font-size:13px;line-height:1.1;text-shadow:0 1px 0 rgba(0,0,0,0.45)}
-  .icon.inbin{opacity:0.55;filter:grayscale(60%);}
-
+  .icon.inbin{opacity:0.55;filter:grayscale(60%)}
   /* taskbar */
-  .taskbar{position:fixed;bottom:0;left:0;right:0;height:44px;background:linear-gradient(180deg,rgba(0,0,0,0.22),rgba(0,0,0,0.45));display:flex;align-items:center;gap:12px;padding:6px 12px;box-sizing:border-box;z-index:999}
-  .taskbar .start{width:40px;height:32px;background:var(--glass);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff}
+  .taskbar{position:fixed;bottom:0;left:0;right:0;height:46px;background:linear-gradient(180deg,rgba(0,0,0,0.22),rgba(0,0,0,0.45));display:flex;align-items:center;gap:10px;padding:6px 10px;box-sizing:border-box;z-index:900}
+  .startBtn{width:44px;height:34px;background:var(--glass);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer}
+  .taskIcons{display:flex;gap:8px;align-items:center;flex:1}
+  .taskIconBtn{min-width:80px;height:32px;background:rgba(255,255,255,0.06);border-radius:6px;color:#fff;display:flex;align-items:center;gap:8px;padding:4px 8px;cursor:pointer}
   /* windows */
-  .window{position:absolute;width:520px;height:380px;background:var(--window-bg);box-shadow:var(--shadow);border-radius:8px;overflow:hidden;border:1px solid rgba(0,0,0,0.08);display:flex;flex-direction:column}
+  .window{position:absolute;background:var(--window-bg);box-shadow:var(--shadow);border-radius:8px;overflow:hidden;border:1px solid rgba(0,0,0,0.08);display:flex;flex-direction:column}
   .titlebar{height:40px;background:linear-gradient(180deg,rgba(0,0,0,0.03),transparent);display:flex;align-items:center;gap:8px;padding:0 10px;cursor:grab;flex-shrink:0}
   .title{flex:1;font-weight:700}
   .controls{display:flex;gap:8px}
-  .btn{width:34px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer}
+  .btnWin{width:36px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer}
   .closeBtn{background:#ff5c5c;color:#222;font-weight:700}
   .minBtn{background:#ffd25c;color:#222}
-  .window .content{padding:12px;flex:1;overflow:auto}
+  .winContent{padding:12px;flex:1;overflow:auto}
   /* explorer */
-  .sidebar{width:200px;border-right:1px solid #e6e6e6;padding-right:10px;box-sizing:border-box}
+  .sidebar{width:220px;border-right:1px solid #e6e6e6;padding-right:10px;box-sizing:border-box}
   .folderItem{padding:8px;border-radius:6px;cursor:pointer;margin-bottom:6px;background:#f3f4f6}
-  .fileItem{padding:8px;border-radius:6px;background:#fff;margin-bottom:8px;cursor:grab;border:1px solid #eee;display:flex;justify-content:space-between}
-  .fileBtn{background:#2b7cff;color:#fff;border:0;padding:6px 8px;border-radius:6px;cursor:pointer}
-  /* small */
-  .hidden{display:none}
-  .center{display:flex;align-items:center;justify-content:center}
-  /* responsive */
+  .fileItem{padding:8px;border-radius:6px;background:#fff;margin-bottom:8px;cursor:grab;border:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
+  .fileBtn{background:var(--accent);color:#fff;border:0;padding:6px 8px;border-radius:6px;cursor:pointer}
+  /* watermark */
+  .watermark{position:fixed;right:12px;bottom:8px;opacity:0.6;color:#fff;font-weight:700;background:transparent;z-index:999;pointer-events:none}
+  /* shutdown black */
+  .shutdownBlack{position:fixed;inset:0;background:#000;z-index:99999;display:none}
+  /* small responsiveness */
   @media(max-width:720px){ .window{width:92%;height:70%} .sidebar{display:none} }
 </style>
 </head>
 <body>
-  <div id="desktop" class="desktop" tabindex="0">
-    <div class="overlay-gradient"></div>
-    <div id="icons" class="icons" aria-hidden="false"></div>
-    <div id="windows"></div>
-  </div>
 
-  <div class="taskbar">
-    <div class="start">☰</div>
-    <div style="color:#fff;opacity:0.9">BrowserOS</div>
-    <div style="margin-left:auto;color:#fff;opacity:0.9">Status: ready</div>
+<!-- Boot screen -->
+<div id="bootScreen" class="overlayScreen">
+  <div class="card center" style="flex-direction:column;align-items:center">
+    <div class="logo">BrowserOS</div>
+    <div class="loader"></div>
+    <div style="opacity:0.85">Booting…</div>
   </div>
+</div>
+
+<!-- Product key screen (hidden until boot done) -->
+<div id="keyScreen" class="overlayScreen" style="opacity:0;pointer-events:none">
+  <div class="card">
+    <div style="font-size:18px;font-weight:700;margin-bottom:6px">Activate BrowserOS</div>
+    <div>Enter product key to activate full features</div>
+    <input id="productKeyInput" class="input" placeholder="Enter product key">
+    <div style="margin-top:10px;display:flex;gap:8px;justify-content:center">
+      <button id="activateBtn" class="btn">Activate</button>
+      <button id="noKeyBtn" class="btn ghost">I don't have a product key</button>
+    </div>
+    <div id="keyMsg" style="margin-top:8px;color:#ffdd99;min-height:18px"></div>
+  </div>
+</div>
+
+<!-- Desktop (main) -->
+<div id="desktop" class="desktop" style="opacity:0;pointer-events:none">
+  <div class="desktop-gradient"></div>
+  <div id="icons" class="icons"></div>
+  <div id="windowsRoot"></div>
+</div>
+
+<!-- Taskbar -->
+<div class="taskbar" id="taskbar" style="opacity:0;pointer-events:none">
+  <div class="startBtn" id="startBtn">☰</div>
+  <div class="taskIcons" id="taskIcons"></div>
+  <div style="color:#fff;opacity:0.9">Status: ready</div>
+</div>
+
+<!-- watermark (shown only if not activated and user chose no-key) -->
+<div id="watermark" class="watermark hidden">Activate BrowserOS</div>
+
+<!-- shutdown black screen -->
+<div id="shutdownBlack" class="shutdownBlack"></div>
 
 <script>
-/* BrowserOS single-file implementation
-   - draggable icons that persist
-   - drag icons into recycle bin (non-deleting): they stay in bin until moved out
-   - explorer with Desktop/Downloads/Documents/Pictures
-   - wallpaper.jpg is a file button in explorer -> opens an OS window with upload / URL textbox (no prompt)
-   - wallpaper persists to localStorage
-   - file drag & drop between folders (HTML5 DnD)
-*/
+/* Persistent keys */
+const K_POS = 'bos_v2_positions';
+const K_WP = 'bos_v2_wallpaper';
+const K_FS = 'bos_v2_fs';
+const K_ACT = 'bos_v2_activated';
+const K_BIN = 'bos_v2_binstate';
+const PRODUCT_KEY = 'EXAMPLE.PRODUCT.KEY.VALUE';
 
-const ICON_DEFS = [
-  { id: 'recycle', label: 'Recycle Bin', icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAAD9jU7eAAAACXBIWXMAAAsTAAALEwEAmpwYAAAB20lEQVR4nO2WzUrDQBSGc3wA6gAdYAFoAFoABqBqQAcgA1oAFoAF0gNwB1kJ2I7s1YEQl2kXn2bM2b3Yb3Y0u5C+2s1htrdM/1iX7ZcM+QwC+iPoY0w4ZgX9h5gQ2wA8sA/kLi2Vq5Gg4tYCEzFhVnWj9s0qg2gM8wS1WvWbZs8jW0Ytlv3YHq8ti5iW1q7b8rK+qYvYbVgqjzFmM6p3j5XyqQ5z1zEsQxwG4D+g4cUzq2Z4g2w35g4Q4Yq2iQw8b2o3o3q3q5fT6bqf9J1vY/D6s7u/Hg7d9v4fS9w5gX7wL8A5f8L2gP4/4g1wWmQx8B8wL4gPhv2wB1wG5BVc1p7HqgEzwA7gN9gBbgGfFJYQ7GHs3n1l6Eo8k6r1b7nRq0z5XwD3gQ8gJcBz1u3f0b2hZr1d3cQzjS3sHh8v6z2+8Y7gFj6u8gLw7oHkdzV9b3k1dhbv/EoAfbf8qvDgJc3y2vQTD/fqQ2YHZNzJ9q9b2QAAAABJRU5ErkJggg==' },
-  { id: 'calculator', label: 'Calculator', icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAAD9jU7eAAAACXBIWXMAAAsTAAALEwEAmpwYAAABxUlEQVR4nO2WwW7CMBCFd6AEgAegA6gA6gA6gAegAegA6gA6oF2E6Q2s4oS1J2iK3Z2bX0qkQH5J3t/4zKQw9m3c3A4fGk8uDkZqgQmW0p3mYAcwD4xqgQxgqg3wXgP3gQ6v6ZqG1N1wA7wOHtBb2o2gFhQhtm8Jv2w3cB1wHs0H6Jj5yqgqg1gQx0Jr1f7kE8i4l9+q8j6I9hA9wG4wZ+q9z3n0r0P8hI4n9r2nF5x9gk3p2pX9n6bq8c1gA7gCugC9Z1SxgHs6YwqtnvP6f0jv4z5wqgI7wL9wF8wD3wH7gB8wD9gF1gPqCrwDq7ew4bGQDz4wQ0xU0D2s9nNQG4C0YgJd5gD7Q9sAHoAbY2eB2Y0K2g3m0fK0W1u3r3wqg0UQmM6p3e7I3oC1wF7wN+gP2gQ3wJ2wFQwPf3v8G0gOG2r0V8j6Fb6Cp8o1u9QFqk1Q1Lo9YwAAAABJRU5ErkJggg==' },
-  { id: 'explorer', label: 'File Explorer', icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAAD9jU7eAAAACXBIWXMAAAsTAAALEwEAmpwYAAABtElEQVR4nO2WsUoDURBFv2gHZAB0gAdIAq0ANoAC6gA6gA6gAegAegA6gA6gA6gO0s5wqGQ1F7Yb7m7mZ3ZkS3qkQ9kT2f7nM8DvY4hYlnV3gGf4w8QvjgO4wP8AkcQ6YK7nAJ4kLMZ6X2m2m7YB3wBvQG+4q2gVwA+4C7wE8wH8wD3wH8wH8wD3wH8wD3wH3gL8AcwG/4C3wB8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD4wH+gBc3Y9oA+oX/AFU0r5v4v+oHrFv9v7l4Jp7yq4v9gJfGA9Qh0Zr7t6qvG7j1c7fB+q2r3QHcK3wz3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD7Q5c2m0gQ1gAAAABJRU5ErkJggg==' },
-  { id: 'browser', label: 'Internet', icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAAD9jU7eAAAACXBIWXMAAAsTAAALEwEAmpwYAAABvElEQVR4nO2WTU7CQBSGv4gAagBqgAagBqgAagBqgAagBqgAagBqgY2hO6g2o0bS0u2u3m3m3k2v9p4oS2b5n7fZvew8k0y+2e8y8nQAC7wA3wD8wG8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wF8gD1Kq6qY3z8X3R2kK3Y1gH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3QB3gN6m+3+8p8j3mQAAAABJRU5ErkJggg==' }
-];
-
-const DESKTOP_KEY = 'bos_icons_positions_v1';
-const WALLPAPER_KEY = 'bos_wallpaper_v1';
-const FS_KEY = 'bos_fs_v1';
-const BIN_STATE_KEY = 'bos_bin_v1';
-
+/* DOM */
+const bootScreen = document.getElementById('bootScreen');
+const keyScreen = document.getElementById('keyScreen');
 const desktop = document.getElementById('desktop');
 const iconsWrap = document.getElementById('icons');
-const windowsRoot = document.getElementById('windows');
+const windowsRoot = document.getElementById('windowsRoot');
+const taskbar = document.getElementById('taskbar');
+const startBtn = document.getElementById('startBtn');
+const taskIcons = document.getElementById('taskIcons');
+const watermark = document.getElementById('watermark');
+const shutdownBlack = document.getElementById('shutdownBlack');
+const activateBtn = document.getElementById('activateBtn');
+const noKeyBtn = document.getElementById('noKeyBtn');
+const productKeyInput = document.getElementById('productKeyInput');
+const keyMsg = document.getElementById('keyMsg');
 
-let topZ = 200;
+/* icon defs (small base64 icons) */
+const ICONS_DEF = [
+  { id:'recycle', label:'Recycle Bin', icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAAD9jU7eAAAACXBIWXMAAAsTAAALEwEAmpwYAAAB20lEQVR4nO2WzUrDQBSGc3wA6gAdYAFoAFoABqBqQAcgA1oAFoAF0gNwB1kJ2I7s1YEQl2kXn2bM2b3Yb3Y0u5C+2s1htrdM/1iX7ZcM+QwC+iPoY0w4ZgX9h5gQ2wA8sA/kLi2Vq5Gg4tYCEzFhVnWj9s0qg2gM8wS1WvWbZs8jW0Ytlv3YHq8ti5iW1q7b8rK+qYvYbVgqjzFmM6p3j5XyqQ5z1zEsQxwG4D+g4cUzq2Z4g2w35g4Q4Yq2iQw8b2o3o3q3q5fT6bqf9J1vY/D6s7u/Hg7d9v4fS9w5gX7wL8A5f8L2gP4/4g1wWmQx8B8wL4gPhv2wB1wG5BVc1p7HqgEzwA7gN9gBbgGfFJYQ7GHs3n1l6Eo8k6r1b7nRq0z5XwD3gQ8gJcBz1u3f0b2hZr1d3cQzjS3sHh8v6z2+8Y7gFj6u8gLw7oHkdzV9b3k1dhbv/EoAfbf8qvDgJc3y2vQTD/fqQ2YHZNzJ9q9b2QAAAABJRU5ErkJggg==' },
+  { id:'calculator', label:'Calculator', icon:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAAD9jU7eAAAACXBIWXMAAAsTAAALEwEAmpwYAAABxUlEQVR4nO2WwW7CMBCFd6AEgAegA6gA6gA6gAegAegA6gA6oF2E6Q2s4oS1J2iK3Z2bX0qkQH5J3t/4zKQw9m3c3A4fGk8uDkZqgQmW0p3mYAcwD4xqgQxgqg3wXgP3gQ6v6ZqG1N1wA7wOHtBb2o2gFhQhtm8Jv2w3cB1wHs0H6Jj5yqgqg1gQx0Jr1f7kE8i4l9+q8j6I9hA9wG4wZ+q9z3n0r0P8hI4n9r2nF5x9gk3p2pX9n6bq8c1gA7gCugC9Z1SxgHs6YwqtnvP6f0jv4z5wqgI7wL9wF8wD3wH7gB8wD9gF1gPqCrwDq7ew4bGQDz4wQ0xU0D2s9nNQG4C0YgJd5gD7Q9sAHoAbY2eB2Y0K2g3m0fK0W1u3r3wqg0UQmM6p3e7I3oC1wF7wN+gP2gQ3wJ2wFQwPf3v8G0gOG2r0V8j6Fb6Cp8o1u9QFqk1Q1Lo9YwAAAABJRU5ErkJggg==' },
+  { id:'explorer', label:'File Explorer', icon:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAAD9jU7eAAAACXBIWXMAAAsTAAALEwEAmpwYAAABtElEQVR4nO2WsUoDURBFv2gHZAB0gAdIAq0ANoAC6gA6gA6gAegAegA6gA6gA6gO0s5wqGQ1F7Yb7m7mZ3ZkS3qkQ9kT2f7nM8DvY4hYlnV3gGf4w8QvjgO4wP8AkcQ6YK7nAJ4kLMZ6X2m2m7YB3wBvQG+4q2gVwA+4C7wE8wH8wD3wH8wH8wD3wH8wD3wH3gL8AcwG/4C3wB8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD4wH+gBc3Y9oA+oX/AFU0r5v4v+oHrFv9v7l4Jp7yq4v9gJfGA9Qh0Zr7t6qvG7j1c7fB+q2r3QHcK3wz3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD7Q5c2m0gQ1gAAAABJRU5ErkJggg==' },
+  { id:'browser', label:'Internet', icon:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAAD9jU7eAAAACXBIWXMAAAsTAAALEwEAmpwYAAABvElEQVR4nO2WTU7CQBSGv4gAagBqgAagBqgAagBqgAagBqgAagBqgY2hO6g2o0bS0u2u3m3m3k2v9p4oS2b5n7fZvew8k0y+2e8y8nQAC7wA3wD8wG8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wF8gD1Kq6qY3z8X3R2kK3Y1gH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3wH8wD3QB3gN6m+3+8p8j3mQAAAABJRU5ErkJggg==' },
+];
 
-// load persisted objects
-function loadJSON(key, fallback){ try{ const s = localStorage.getItem(key); return s ? JSON.parse(s) : fallback; } catch(e){ return fallback; } }
-function saveJSON(key, obj){ localStorage.setItem(key, JSON.stringify(obj)); }
+/* storage helpers */
+function load(key, fallback){ try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch(e){ return fallback; } }
+function save(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
 
-let positions = loadJSON(DESKTOP_KEY, {}); // id -> {x,y, inBin:boolean}
-let fs = loadJSON(FS_KEY, null);
-let binState = loadJSON(BIN_STATE_KEY, {}); // id -> true/false
+/* state */
+let positions = load(K_POS, {}); // id -> {x,y,inBin}
+let wallpaper = load(K_WP, null);
+let fs = load(K_FS, null);
+let activated = load(K_ACT, null); // null = not set, true/false
+let binState = load(K_BIN, {});
 
-// initial filesystem if none
+/* default FS */
 if(!fs){
   fs = {
-    Desktop: {
-      'welcome.txt': 'Welcome to BrowserOS!\nDouble-click files to open. Drag files between folders.\nDouble-click wallpaper.jpg in Pictures to change wallpaper.',
-    },
+    Desktop: { 'welcome.txt': 'Welcome to BrowserOS!\nDouble-click files to open. Drag icons into the Recycle Bin.' },
+    Documents: { 'todo.txt': ' - improve OS\n - ship project' },
     Downloads: {},
-    Documents: {
-      'todo.txt': ' - make cool OS UI\n - add wallpapers\n - ship it',
-    },
-    Pictures: {
-      'wallpaper.jpg': '(double-click to change wallpaper)',
-      'logo.png': '(placeholder image file)'
-    }
+    Pictures: { 'wallpaper.jpg': '(double-click or click to change wallpaper)' }
   };
-  saveJSON(FS_KEY, fs);
+  save(K_FS, fs);
 }
 
-// create icons on desktop
+/* Apply saved wallpaper if available and activation permits */
+function applyWallpaper(){
+  if(!activated) {
+    // if activation not yet chosen, but wallpaper might be saved — only apply if activated true
+    if(wallpaper && activated === true) document.body.style.backgroundImage = `url("${wallpaper}")`;
+    else document.body.style.backgroundImage = '';
+  } else {
+    if(wallpaper) document.body.style.backgroundImage = `url("${wallpaper}")`;
+    else document.body.style.backgroundImage = '';
+  }
+}
+
+/* Boot sequence */
+function bootSequence(){
+  // show bootScreen for 7s, then fade into key screen
+  setTimeout(()=> {
+    bootScreen.style.opacity = '0';
+    bootScreen.style.pointerEvents = 'none';
+    // show key screen with smooth transition
+    keyScreen.style.opacity = '1';
+    keyScreen.style.pointerEvents = 'auto';
+  }, 7000); // 7 seconds
+}
+
+/* UI building: desktop icons */
 function renderIcons(){
   iconsWrap.innerHTML = '';
-  ICON_DEFS.forEach(def=>{
+  ICONS_DEF.forEach((def, idx)=>{
     const el = document.createElement('div');
     el.className = 'icon';
     el.dataset.id = def.id;
-    el.dataset.type = def.id;
-    el.tabIndex = 0;
     el.innerHTML = `<img src="${def.icon}" alt="${def.label}"><div class="label">${def.label}</div>`;
     iconsWrap.appendChild(el);
-
-    // apply saved position or use vertical stack
+    // restore position or place stacked
     const p = positions[def.id];
     if(p && typeof p.x === 'number' && typeof p.y === 'number'){
-      el.style.position = 'absolute';
-      el.style.left = p.x + 'px';
-      el.style.top = p.y + 'px';
+      el.style.left = p.x + 'px'; el.style.top = p.y + 'px'; el.style.position='absolute';
       if(p.inBin) el.classList.add('inbin');
     } else {
-      // place stacked on left if not stored
-      el.style.position = 'absolute';
-      const idx = ICON_DEFS.findIndex(i=>i.id===def.id);
-      el.style.left = 20 + 'px';
-      el.style.top = (20 + idx * 100) + 'px';
+      el.style.left = '20px'; el.style.top = (20 + idx*100) + 'px'; el.style.position='absolute';
       positions[def.id] = { x: parseInt(el.style.left), y: parseInt(el.style.top), inBin: false };
-      saveJSON(DESKTOP_KEY, positions);
+      save(K_POS, positions);
     }
-
-    // doubleclick opens app
+    // doubleclick opens
     el.addEventListener('dblclick', ()=> openApp(def.id));
-
     // make draggable
-    makeIconDraggable(el);
+    makeDraggableIcon(el);
   });
 }
-function makeIconDraggable(el){
-  let dragging = false, offsetX = 0, offsetY = 0;
-  el.addEventListener('pointerdown', (e) => {
+
+/* draggable icons, dropping into recycle bin */
+function makeDraggableIcon(el){
+  let dragging = false, offX=0, offY=0;
+  el.addEventListener('pointerdown', (e)=>{
     if(e.button !== 0) return;
     el.setPointerCapture(e.pointerId);
     dragging = true;
     const rect = el.getBoundingClientRect();
-    const deskRect = desktop.getBoundingClientRect();
-    // ensure absolute
+    const desk = desktop.getBoundingClientRect();
     if(getComputedStyle(el).position !== 'absolute'){
       el.style.position = 'absolute';
-      el.style.left = rect.left - deskRect.left + 'px';
-      el.style.top = rect.top - deskRect.top + 'px';
+      el.style.left = rect.left - desk.left + 'px';
+      el.style.top = rect.top - desk.top + 'px';
     }
-    offsetX = e.clientX - el.getBoundingClientRect().left;
-    offsetY = e.clientY - el.getBoundingClientRect().top;
+    offX = e.clientX - el.getBoundingClientRect().left;
+    offY = e.clientY - el.getBoundingClientRect().top;
     el.style.cursor = 'grabbing';
-    el.style.zIndex = ++topZ;
+    el.style.zIndex = 800;
   });
-  function moveHandler(e){
+  function mv(e){
     if(!dragging) return;
-    const desk = desktop.getBoundingClientRect();
-    let x = e.clientX - desk.left - offsetX;
-    let y = e.clientY - desk.top - offsetY;
-    x = Math.max(6, Math.min(desk.width - el.offsetWidth - 6, x));
-    y = Math.max(6, Math.min(desk.height - el.offsetHeight - 46, y));
-    el.style.left = x + 'px';
-    el.style.top = y + 'px';
+    const d = desktop.getBoundingClientRect();
+    let x = e.clientX - d.left - offX;
+    let y = e.clientY - d.top - offY;
+    x = Math.max(6, Math.min(d.width - el.offsetWidth - 6, x));
+    y = Math.max(6, Math.min(d.height - el.offsetHeight - 46, y));
+    el.style.left = x + 'px'; el.style.top = y + 'px';
   }
-  function upHandler(e){
+  function up(e){
     if(!dragging) return;
     dragging = false;
     el.style.cursor = 'grab';
-    el.releasePointerCapture(e.pointerId);
-    // check if dropped on recycle bin icon
-    const binEl = document.querySelector('.icon[data-type="recycle"]');
+    try{ el.releasePointerCapture(e.pointerId); } catch(e){}
+    // check overlap with recycle icon
+    const binEl = document.querySelector('.icon[data-id="recycle"]');
     if(binEl){
       const binRect = binEl.getBoundingClientRect();
       const elRect = el.getBoundingClientRect();
-      // overlap test
-      const overlapping = !(elRect.right < binRect.left || elRect.left > binRect.right || elRect.bottom < binRect.top || elRect.top > binRect.bottom);
-      if(overlapping){
-        // mark in bin
-        el.classList.add('inbin');
-        positions[el.dataset.id] = { x: binRect.left - desktop.getBoundingClientRect().left + 8, y: binRect.top - desktop.getBoundingClientRect().top + 8, inBin: true };
-        // move icon visually to bin area
-        el.style.left = positions[el.dataset.id].x + 'px';
-        el.style.top = positions[el.dataset.id].y + 'px';
-        saveJSON(DESKTOP_KEY, positions);
-        binState[el.dataset.id] = true;
-        saveJSON(BIN_STATE_KEY, binState);
+      const overlap = !(elRect.right < binRect.left || elRect.left > binRect.right || elRect.bottom < binRect.top || elRect.top > binRect.bottom);
+      if(overlap){
+        // move into bin visually: place near bin
+        const drect = desktop.getBoundingClientRect();
+        const newX = binRect.left - drect.left + 8;
+        const newY = binRect.top - drect.top + 8;
+        el.style.left = newX + 'px'; el.style.top = newY + 'px'; el.classList.add('inbin');
+        positions[el.dataset.id] = { x: newX, y: newY, inBin: true };
+        save(K_POS, positions);
+        binState[el.dataset.id] = true; save(K_BIN, binState);
         return;
       }
     }
-    // if not overlapping bin, ensure it's removed from bin if previously in
+    // if dropped elsewhere, remove inBin
     if(positions[el.dataset.id] && positions[el.dataset.id].inBin){
       positions[el.dataset.id].inBin = false;
       el.classList.remove('inbin');
     }
     positions[el.dataset.id] = { x: parseInt(el.style.left), y: parseInt(el.style.top), inBin: !!positions[el.dataset.id].inBin };
-    saveJSON(DESKTOP_KEY, positions);
-    // update binState store
-    if(binState[el.dataset.id]){ binState[el.dataset.id] = !!positions[el.dataset.id].inBin; saveJSON(BIN_STATE_KEY, binState); }
+    save(K_POS, positions);
+    // update binState
+    if(binState[el.dataset.id]){ binState[el.dataset.id] = !!positions[el.dataset.id].inBin; save(K_BIN, binState); }
   }
-  window.addEventListener('pointermove', moveHandler);
-  window.addEventListener('pointerup', upHandler);
+  window.addEventListener('pointermove', mv);
+  window.addEventListener('pointerup', up);
 }
 
-/* Window system */
-function createWindow(opts){
+/* Window system: create / drag / close / minimize / restore via taskbar */
+let winCounter = 0;
+const minimizedMap = {}; // winId -> {btnEl, winEl}
+
+function createWindow({title='Window', width=520, height=380, x=120, y=120, content=null} = {}){
   const win = document.createElement('div');
   win.className = 'window';
-  win.style.left = (opts.x || 120) + 'px';
-  win.style.top = (opts.y || 120) + 'px';
-  win.style.width = opts.width ? opts.width + 'px' : '520px';
-  win.style.height = opts.height ? opts.height + 'px' : '380px';
-  win.style.zIndex = ++topZ;
-
-  const titlebar = document.createElement('div');
-  titlebar.className = 'titlebar';
-  const tspan = document.createElement('div');
-  tspan.className = 'title';
-  tspan.textContent = opts.title || 'Window';
-  const controls = document.createElement('div');
-  controls.className = 'controls';
-  const min = document.createElement('div'); min.className = 'btn minBtn'; min.textContent = '—';
-  const close = document.createElement('div'); close.className = 'btn closeBtn'; close.textContent = '✕';
-  controls.appendChild(min);
-  controls.appendChild(close);
-  titlebar.appendChild(tspan);
-  titlebar.appendChild(controls);
-
-  const content = document.createElement('div');
-  content.className = 'content';
-  if(typeof opts.content === 'string') content.innerHTML = opts.content;
-  else if(opts.content instanceof HTMLElement) content.appendChild(opts.content);
-
-  win.appendChild(titlebar);
-  win.appendChild(content);
+  win.style.left = x + 'px'; win.style.top = y + 'px';
+  win.style.width = width + 'px'; win.style.height = height + 'px';
+  win.dataset.winId = 'win_' + (++winCounter);
+  win.style.zIndex = 300;
+  // titlebar
+  const titlebar = document.createElement('div'); titlebar.className = 'titlebar';
+  const tspan = document.createElement('div'); tspan.className = 'title'; tspan.textContent = title;
+  const controls = document.createElement('div'); controls.className = 'controls';
+  const minBtn = document.createElement('div'); minBtn.className = 'btnWin minBtn'; minBtn.textContent = '—';
+  const closeBtn = document.createElement('div'); closeBtn.className = 'btnWin closeBtn'; closeBtn.textContent = '✕';
+  controls.appendChild(minBtn); controls.appendChild(closeBtn);
+  titlebar.appendChild(tspan); titlebar.appendChild(controls);
+  const contentDiv = document.createElement('div'); contentDiv.className = 'winContent';
+  if(content) {
+    if(typeof content === 'string') contentDiv.innerHTML = content;
+    else contentDiv.appendChild(content);
+  }
+  win.appendChild(titlebar); win.appendChild(contentDiv);
   windowsRoot.appendChild(win);
-
-  // dragging
-  makeWindowDraggable(win, titlebar);
-
-  // bring to front on pointerdown
+  // bring to front
   win.addEventListener('pointerdown', ()=> win.style.zIndex = ++topZ );
-
-  // close
-  close.addEventListener('click', ()=> {
-    // fully remove element
+  // drag
+  makeWindowDraggable(win, titlebar);
+  // close behavior: remove and cleanup taskbar if minimized
+  closeBtn.addEventListener('click', ()=>{
+    const id = win.dataset.winId;
+    if(minimizedMap[id]){
+      // remove taskbar button first
+      minimizedMap[id].btnEl.remove();
+      delete minimizedMap[id];
+    }
     win.remove();
   });
-
-  // minimize (just hide)
-  min.addEventListener('click', ()=> {
-    // toggle
-    if(content.style.display === 'none'){ content.style.display = ''; win.style.height = opts.height ? opts.height + 'px' : '380px'; }
-    else { content.style.display = 'none'; win.style.height = '40px'; }
+  // minimize behavior: hide window and add icon to taskbar
+  minBtn.addEventListener('click', ()=>{
+    const id = win.dataset.winId;
+    win.style.display = 'none';
+    // create taskbar icon
+    const btn = document.createElement('div'); btn.className = 'taskIconBtn'; btn.textContent = title;
+    // clicking restores
+    btn.addEventListener('click', ()=>{
+      win.style.display = '';
+      win.style.zIndex = ++topZ;
+      btn.remove();
+      delete minimizedMap[id];
+    });
+    taskIcons.appendChild(btn);
+    minimizedMap[id] = { btnEl: btn, winEl: win };
   });
-
-  return { win, content, titlebar };
+  return { win, contentDiv, titlebar, id: win.dataset.winId };
 }
+
 function makeWindowDraggable(win, bar){
   let dragging=false, start={x:0,y:0}, orig={l:0,t:0};
   bar.addEventListener('pointerdown', (e)=>{
@@ -285,7 +339,7 @@ function makeWindowDraggable(win, bar){
     dragging = true;
     start.x = e.clientX; start.y = e.clientY;
     orig.l = win.offsetLeft; orig.t = win.offsetTop;
-    win.setPointerCapture(e.pointerId);
+    try{ bar.setPointerCapture(e.pointerId); } catch(e){}
   });
   function mv(e){
     if(!dragging) return;
@@ -296,43 +350,35 @@ function makeWindowDraggable(win, bar){
   function up(e){
     if(!dragging) return;
     dragging = false;
-    try{ bar.releasePointerCapture(e.pointerId); }catch(e){}
+    try{ bar.releasePointerCapture(e.pointerId); } catch(e){}
   }
   window.addEventListener('pointermove', mv);
   window.addEventListener('pointerup', up);
 }
 
-/* Apps */
-function openApp(id){
-  if(id === 'recycle') openRecycle();
-  else if(id === 'calculator') openCalculator();
-  else if(id === 'explorer') openExplorer();
-  else if(id === 'browser') openBrowser();
-}
-
-/* Recycle bin window lists what's in the bin (icons only) */
+/* Apps: Recycle (lists icons that are in bin) */
 function openRecycle(){
-  const el = document.createElement('div');
-  el.style.display = 'flex'; el.style.flexDirection = 'column'; el.style.height = '100%';
-  const header = document.createElement('div'); header.textContent = 'Items in Recycle Bin (icons moved here)';
-  header.style.fontWeight = '700'; header.style.marginBottom = '8px';
-  const list = document.createElement('div'); list.style.flex = '1'; list.style.overflow = 'auto';
-  el.appendChild(header); el.appendChild(list);
-  // populate from positions/binState
+  const wrap = document.createElement('div');
+  wrap.style.display='flex'; wrap.style.flexDirection='column';
+  const title = document.createElement('div'); title.textContent = 'Icons in Recycle Bin'; title.style.fontWeight='700'; title.style.marginBottom='8px';
+  wrap.appendChild(title);
+  const list = document.createElement('div'); list.style.flex='1'; list.style.overflow='auto';
   Object.keys(positions).forEach(id=>{
     if(positions[id] && positions[id].inBin){
       const row = document.createElement('div'); row.style.padding='8px'; row.style.borderBottom='1px solid #eee';
-      row.textContent = ICON_DEFS.find(d=>d.id===id)?.label || id;
+      const name = ICONS_DEF.find(x=>x.id===id)?.label || id;
+      row.textContent = name;
       list.appendChild(row);
     }
   });
-  createWindow({ title: 'Recycle Bin (decorative)', content: el, width: 420, height: 320 });
+  wrap.appendChild(list);
+  createWindow({title:'Recycle Bin',content:wrap, width:420, height:320});
 }
 
-/* Calculator app */
+/* Calculator */
 function openCalculator(){
-  const wrapper = document.createElement('div');
-  wrapper.innerHTML = `
+  const el = document.createElement('div');
+  el.innerHTML = `
     <div style="display:flex;flex-direction:column;height:100%">
       <div id="calc-display" style="height:60px;background:#0b2036;color:#fff;font-size:28px;padding:10px;border-radius:8px;display:flex;align-items:center;justify-content:flex-end">0</div>
       <div style="margin-top:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
@@ -343,31 +389,30 @@ function openCalculator(){
       </div>
     </div>
   `;
-  const { win, content } = createWindow({ title: 'Calculator', content: wrapper, width: 360, height: 360 });
-  const display = content.querySelector('#calc-display');
+  const { contentDiv } = createWindow({ title:'Calculator', content: el, width:360, height:360 });
+  const display = contentDiv.querySelector('#calc-display');
   let expr = '';
-  content.querySelectorAll('button').forEach(b=>{
+  contentDiv.querySelectorAll('button').forEach(b=>{
     b.addEventListener('click', ()=>{
       if(b.id === 'calc-eq'){
         try{
           const safe = expr.replace(/×/g,'*').replace(/÷/g,'/');
           const res = Function('return ('+safe+')')();
           expr = String(res); display.textContent = expr;
-        }catch(e){ display.textContent = 'Error'; expr = ''; }
+        } catch(e){ display.textContent = 'Error'; expr=''; }
       } else if(b.dataset.val){ expr += b.dataset.val; display.textContent = expr; }
       else if(b.dataset.op){ expr += b.dataset.op; display.textContent = expr; }
     });
   });
 }
 
-/* File Explorer app */
+/* File Explorer with Desktop / Documents / Downloads / Pictures and wallpaper button */
 function openExplorer(){
-  // build UI
   const container = document.createElement('div');
-  container.style.display = 'flex';
-  container.style.height = '100%';
+  container.style.display='flex';
+  container.style.height='100%';
   container.innerHTML = `
-    <div class="sidebar" id="fs-sidebar">
+    <div class="sidebar">
       <div style="font-weight:700;margin-bottom:8px">Folders</div>
       <div id="folder-list"></div>
     </div>
@@ -382,250 +427,337 @@ function openExplorer(){
       <div id="file-list" style="flex:1;margin-top:8px;overflow:auto;padding-right:8px"></div>
     </div>
   `;
-  const { win, content } = createWindow({ title: 'File Explorer', content: container, width: 760, height: 480 });
-  const folderList = content.querySelector('#folder-list');
-  const fileList = content.querySelector('#file-list');
-
-  // render folder list
+  const { contentDiv } = createWindow({ title:'File Explorer', content: container, width:760, height:480 });
+  const folderList = contentDiv.querySelector('#folder-list');
+  const fileList = contentDiv.querySelector('#file-list');
   function renderFolders(){
     folderList.innerHTML = '';
-    Object.keys(fs).forEach(folder=>{
-      const f = document.createElement('div'); f.className = 'folderItem'; f.textContent = folder; f.draggable = false;
-      f.addEventListener('click', ()=> showFolder(folder));
+    Object.keys(fs).forEach(name=>{
+      const f = document.createElement('div'); f.className='folderItem'; f.textContent = name;
+      f.addEventListener('click', ()=> showFolder(name));
       folderList.appendChild(f);
     });
   }
-  let activeFolder = Object.keys(fs)[0];
-
+  let active = Object.keys(fs)[0];
   function showFolder(name){
-    activeFolder = name;
-    fileList.innerHTML = '';
+    active = name; fileList.innerHTML = '';
     const files = fs[name];
     Object.keys(files).forEach(fname=>{
-      const fi = document.createElement('div');
-      fi.className = 'fileItem';
-      fi.draggable = true;
-      fi.dataset.name = fname;
-      fi.innerHTML = `<div>${fname}</div><div style="display:flex;gap:8px"><button class="fileBtn open">Open</button><button class="fileBtn move">Move</button></div>`;
-      // double-click open (special case wallpaper.jpg)
+      const fi = document.createElement('div'); fi.className='fileItem'; fi.dataset.name = fname;
+      const left = document.createElement('div'); left.textContent = fname;
+      const right = document.createElement('div'); right.style.display='flex'; right.style.gap='8px';
+      const openBtn = document.createElement('button'); openBtn.className='fileBtn'; openBtn.textContent='Open';
+      const moveBtn = document.createElement('button'); moveBtn.className='fileBtn'; moveBtn.textContent='Move';
+      right.appendChild(openBtn); right.appendChild(moveBtn);
+      fi.appendChild(left); fi.appendChild(right);
+
+      // double-click open
       fi.addEventListener('dblclick', ()=>{
         if(name === 'Pictures' && fname.toLowerCase() === 'wallpaper.jpg'){
-          openWallpaperWindow();
-        } else {
-          openFileViewer(fname, files[fname]);
-        }
+          openWallpaperEditor();
+        } else openFileViewer(fname, files[fname]);
       });
-      // open button
-      fi.querySelector('.open').addEventListener('click', ()=> {
-        if(name === 'Pictures' && fname.toLowerCase() === 'wallpaper.jpg'){ openWallpaperWindow(); }
+      openBtn.addEventListener('click', ()=>{
+        if(name === 'Pictures' && fname.toLowerCase() === 'wallpaper.jpg') openWallpaperEditor();
         else openFileViewer(fname, files[fname]);
       });
-      // move button toggles a simple select-for-move modal
-      fi.querySelector('.move').addEventListener('click', ()=> {
-        showMoveDialog(name, fname);
+      moveBtn.addEventListener('click', ()=> {
+        const dest = prompt('Move to folder (Available: ' + Object.keys(fs).join(', ') + ')');
+        if(!dest) return;
+        if(!fs[dest]) return alert('Folder not found');
+        fs[dest][fname] = files[fname]; delete files[fname]; save(K_FS, fs); showFolder(active);
       });
 
-      // drag handlers for file-level DnD (HTML5)
-      fi.addEventListener('dragstart', (ev) => {
-        ev.dataTransfer.setData('text/plain', JSON.stringify({ from: name, file: fname }));
-        ev.dataTransfer.effectAllowed = 'move';
-      });
+      // drag & drop (file-level)
+      fi.draggable = true;
+      fi.addEventListener('dragstart', (ev)=> { ev.dataTransfer.setData('text/plain', JSON.stringify({from:name,file:fname})); });
 
       fileList.appendChild(fi);
     });
   }
-
-  // folder-level drop target to move files into
-  folderList.addEventListener('dragover', (ev)=> ev.preventDefault());
-  folderList.addEventListener('drop', (ev)=>{
-    ev.preventDefault();
+  fileList.addEventListener('dragover', (e)=> e.preventDefault());
+  fileList.addEventListener('drop', (e)=> {
+    e.preventDefault();
     try{
-      const data = JSON.parse(ev.dataTransfer.getData('text/plain'));
+      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
       if(data && data.from && data.file){
-        const targetEl = ev.target.closest('.folderItem');
-        if(targetEl){
-          const targetFolder = targetEl.textContent;
-          moveFile(data.from, targetFolder, data.file);
-          showFolder(activeFolder);
-          renderFolders();
+        // move into active
+        if(!fs[active][data.file]){
+          fs[active][data.file] = fs[data.from][data.file];
+          delete fs[data.from][data.file];
+          save(K_FS, fs);
+          showFolder(active);
         }
       }
     }catch(e){}
   });
 
-  function showMoveDialog(from, fname){
-    const choices = Object.keys(fs).filter(k=>k!==from);
-    const pick = prompt('Move "'+fname+'" to which folder? Available: ' + choices.join(', '));
-    if(!pick) return;
-    if(!fs[pick]) return alert('Folder not found: '+pick);
-    moveFile(from, pick, fname);
-    showFolder(activeFolder);
-  }
-  function moveFile(from, to, fileName){
-    if(!fs[from] || !fs[from][fileName]) return;
-    fs[to][fileName] = fs[from][fileName];
-    delete fs[from][fileName];
-    saveJSON(FS_KEY, fs);
-  }
-
-  function openFileViewer(name, contentText){
-    const wrap = document.createElement('div');
-    wrap.innerHTML = `<div style="white-space:pre-wrap;font-family:monospace">${escapeHtml(contentText)}</div>`;
-    createWindow({ title: name, content: wrap, width: 520, height: 360 });
-  }
-
-  // initial render handlers for new file/folder
-  content.querySelector('#new-file').addEventListener('click', ()=>{
-    const nm = prompt('File name (e.g., note.txt)');
+  contentDiv.querySelector('#new-file').addEventListener('click', ()=> {
+    const nm = prompt('File name:');
     if(!nm) return;
-    const text = prompt('File content:') || '';
-    if(fs[activeFolder][nm]) return alert('File exists');
-    fs[activeFolder][nm] = text;
-    saveJSON(FS_KEY, fs);
-    showFolder(activeFolder);
+    const txt = prompt('Content:') || '';
+    if(fs[active][nm]) return alert('File exists');
+    fs[active][nm] = txt; save(K_FS, fs); showFolder(active);
   });
-  content.querySelector('#new-folder').addEventListener('click', ()=>{
-    const nm = prompt('New folder name:');
+  contentDiv.querySelector('#new-folder').addEventListener('click', ()=> {
+    const nm = prompt('Folder name:');
     if(!nm) return;
-    if(fs[nm]) return alert('Folder exists');
-    fs[nm] = {};
-    saveJSON(FS_KEY, fs);
-    renderFolders(); showFolder(activeFolder);
+    if(fs[nm]) return alert('Exists');
+    fs[nm] = {}; save(K_FS, fs); renderFolders(); showFolder(active);
   });
 
-  // handle drop on file list to move files into active folder
-  fileList.addEventListener('dragover', (ev)=> ev.preventDefault());
-  fileList.addEventListener('drop', (ev)=>{
-    ev.preventDefault();
-    try{
-      const data = JSON.parse(ev.dataTransfer.getData('text/plain'));
-      if(data && data.from && data.file){
-        moveFile(data.from, activeFolder, data.file);
-        showFolder(activeFolder);
-      }
-    }catch(e){}
-  });
-
-  // initial
-  renderFolders();
-  showFolder(activeFolder);
+  renderFolders(); showFolder(active);
 }
 
-/* Wallpaper chooser window (no prompt) */
-function openWallpaperWindow(){
-  const wrapper = document.createElement('div');
-  wrapper.style.display = 'flex'; wrapper.style.flexDirection = 'column'; wrapper.style.gap='8px';
-  wrapper.innerHTML = `
-    <div style="font-weight:700">Change Wallpaper</div>
+function openFileViewer(name, contentText){
+  const el = document.createElement('div'); el.innerHTML = `<pre style="white-space:pre-wrap">${escapeHtml(contentText)}</pre>`;
+  createWindow({ title: name, content: el, width:520, height:360 });
+}
+
+/* Wallpaper editor window (in-OS, no prompt). If not activated, Save is disabled. */
+function openWallpaperEditor(){
+  const el = document.createElement('div');
+  el.style.display='flex'; el.style.flexDirection='column'; el.style.gap='8px';
+  el.innerHTML = `
+    <div style="font-weight:700">Wallpaper</div>
     <div style="display:flex;gap:8px;align-items:center">
-      <input type="file" id="wall-file" accept="image/jpeg,image/png">
-      <input type="text" id="wall-url" placeholder="Or paste image URL (jpg/png)" style="flex:1;padding:6px;border-radius:6px;border:1px solid #ccc">
+      <input type="file" id="wp_file" accept="image/jpeg,image/png">
+      <input type="text" id="wp_url" placeholder="Or paste image URL" style="flex:1;padding:6px;border-radius:6px;border:1px solid #ccc">
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <div style="flex:1;height:120px;border-radius:8px;border:1px dashed #ccc;display:flex;align-items:center;justify-content:center" id="wall-preview">Preview</div>
-    </div>
+    <div style="height:140px;border:1px dashed #ccc;border-radius:8px;display:flex;align-items:center;justify-content:center" id="wp_preview">Preview</div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button id="wall-cancel" class="fileBtn">Cancel</button>
-      <button id="wall-save" class="fileBtn">Save</button>
+      <button id="wp_cancel" class="fileBtn">Cancel</button>
+      <button id="wp_save" class="fileBtn">Save</button>
     </div>
   `;
-  const { win, content } = createWindow({ title: 'Change Wallpaper', content: wrapper, width: 560, height: 360 });
-
-  const fileInput = content.querySelector('#wall-file');
-  const urlInput = content.querySelector('#wall-url');
-  const preview = content.querySelector('#wall-preview');
-  const btnSave = content.querySelector('#wall-save');
-  const btnCancel = content.querySelector('#wall-cancel');
+  const { contentDiv, win } = createWindow({ title:'Wallpaper Editor', content: el, width:560, height:360 });
+  const fileIn = contentDiv.querySelector('#wp_file');
+  const urlIn = contentDiv.querySelector('#wp_url');
+  const preview = contentDiv.querySelector('#wp_preview');
+  const btnSave = contentDiv.querySelector('#wp_save');
+  const btnCancel = contentDiv.querySelector('#wp_cancel');
 
   function setPreview(src){
-    preview.innerHTML = '';
-    const img = document.createElement('img');
-    img.src = src;
-    img.style.maxWidth = '100%';
-    img.style.maxHeight = '100%';
-    preview.appendChild(img);
+    preview.innerHTML = ''; const img = document.createElement('img'); img.src = src; img.style.maxWidth='100%'; img.style.maxHeight='100%'; preview.appendChild(img);
     preview.dataset.src = src;
   }
+  // load saved
+  if(wallpaper) setPreview(wallpaper);
 
-  // load current wallpaper into preview if exists
-  const saved = loadJSON(WALLPAPER_KEY, null);
-  if(saved) setPreview(saved);
-
-  fileInput.addEventListener('change', (e)=>{
-    const f = e.target.files && e.target.files[0];
-    if(!f) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setPreview(reader.result);
-    };
-    reader.readAsDataURL(f);
+  fileIn.addEventListener('change', (e)=> {
+    const f = e.target.files && e.target.files[0]; if(!f) return;
+    const reader = new FileReader(); reader.onload = ()=> setPreview(reader.result); reader.readAsDataURL(f);
   });
-
-  urlInput.addEventListener('input', (e)=>{
-    const val = e.target.value.trim();
-    if(val) setPreview(val);
+  urlIn.addEventListener('input', ()=> {
+    const v = urlIn.value.trim(); if(v) setPreview(v);
   });
-
-  btnSave.addEventListener('click', ()=>{
-    const src = preview.dataset.src;
-    if(!src) return alert('No image selected');
-    document.documentElement.style.setProperty('--custom-wallpaper','');
-    // set desktop background using layered approach
-    desktop.style.backgroundImage = `url("${src}")`;
-    saveJSON(WALLPAPER_KEY, src);
-    win.remove();
+  btnSave.addEventListener('click', ()=> {
+    if(activated !== true){
+      alert('You must activate BrowserOS to change wallpaper.');
+      return;
+    }
+    const src = preview.dataset.src; if(!src) return alert('No image selected');
+    wallpaper = src; save(K_WP, wallpaper); applyWallpaper(); win.remove();
   });
   btnCancel.addEventListener('click', ()=> win.remove());
 }
 
 /* Browser app */
 function openBrowser(){
-  const wrapper = document.createElement('div');
-  wrapper.innerHTML = `
+  const el = document.createElement('div');
+  el.innerHTML = `
     <div style="display:flex;flex-direction:column;height:100%">
       <div style="display:flex;gap:8px;margin-bottom:8px">
-        <input id="addr" placeholder="Enter URL (http(s) optional)" style="flex:1;padding:8px;border-radius:6px;border:1px solid #ccc">
-        <button id="go" class="fileBtn">Go</button>
+        <input id="addr" placeholder="Enter URL" style="flex:1;padding:8px;border-radius:6px;border:1px solid #ccc">
+        <button id="gobtn" class="fileBtn">Go</button>
       </div>
-      <div style="flex:1"><iframe id="iframe" src="https://example.com" style="width:100%;height:100%;border-radius:6px;border:1px solid #ddd"></iframe></div>
+      <div style="flex:1"><iframe id="frame" src="https://example.com" style="width:100%;height:100%;border-radius:6px;border:1px solid #ddd"></iframe></div>
     </div>
   `;
-  const { win, content } = createWindow({ title: 'Internet Browser', content: wrapper, width: 900, height: 520 });
-  const addr = content.querySelector('#addr');
-  const go = content.querySelector('#go');
-  const iframe = content.querySelector('#iframe');
-
-  go.addEventListener('click', ()=> {
-    let u = addr.value.trim();
-    if(!u) return;
-    if(!/^https?:\/\//i.test(u)) u = 'https://' + u;
-    iframe.src = u;
+  const { contentDiv } = createWindow({ title:'Internet Browser', content: el, width:900, height:520 });
+  const addr = contentDiv.querySelector('#addr'); const gobtn = contentDiv.querySelector('#gobtn'); const frame = contentDiv.querySelector('#frame');
+  gobtn.addEventListener('click', ()=> {
+    let u = addr.value.trim(); if(!u) return; if(!/^https?:\/\//i.test(u)) u = 'https://' + u; frame.src = u;
   });
-  addr.addEventListener('keydown', (e)=> { if(e.key === 'Enter') go.click(); });
+  addr.addEventListener('keydown', (e)=> { if(e.key==='Enter') gobtn.click(); });
 }
 
-/* Utilities */
+/* Start menu: toggles a small menu with shortcuts + shutdown */
+let startOpen = false;
+function toggleStartMenu(){
+  if(startOpen){ const m = document.getElementById('startMenu'); if(m) m.remove(); startOpen=false; return; }
+  const menu = document.createElement('div'); menu.id='startMenu';
+  menu.style.position='fixed'; menu.style.left='10px'; menu.style.bottom='56px'; menu.style.width='220px'; menu.style.background='rgba(255,255,255,0.96)'; menu.style.borderRadius='8px'; menu.style.boxShadow='0 10px 30px rgba(0,0,0,0.4)'; menu.style.padding='8px'; menu.style.zIndex=1000;
+  menu.innerHTML = `
+    <div style="font-weight:700;margin-bottom:8px">Start</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <button class="fileBtn" data-action="explorer">File Explorer</button>
+      <button class="fileBtn" data-action="calculator">Calculator</button>
+      <button class="fileBtn" data-action="browser">Browser</button>
+      <button class="fileBtn" data-action="recycle">Recycle Bin</button>
+      <div style="height:1px;background:#eee;margin:6px 0"></div>
+      <button id="shutdownBtn" class="fileBtn" style="background:#e74c3c">Shutdown</button>
+    </div>
+  `;
+  document.body.appendChild(menu);
+  startOpen = true;
+  // hook buttons
+  menu.querySelectorAll('[data-action]').forEach(btn=>{
+    btn.addEventListener('click', ()=> {
+      const act = btn.dataset.action;
+      if(act==='explorer') openExplorer();
+      else if(act==='calculator') openCalculator();
+      else if(act==='browser') openBrowser();
+      else if(act==='recycle') openRecycle();
+      menu.remove(); startOpen=false;
+    });
+  });
+  menu.querySelector('#shutdownBtn').addEventListener('click', ()=> {
+    menu.remove(); startOpen=false; doShutdown();
+  });
+}
+
+/* Shutdown: show shutting down loader for 5s then black screen until refresh */
+function doShutdown(){
+  // create shutting down overlay
+  const overlay = document.createElement('div');
+  overlay.style.position='fixed'; overlay.style.inset='0'; overlay.style.background='#050810'; overlay.style.color='#fff';
+  overlay.style.display='flex'; overlay.style.flexDirection='column'; overlay.style.alignItems='center'; overlay.style.justifyContent='center';
+  overlay.style.zIndex = 99999;
+  overlay.innerHTML = `<div style="font-size:28px;font-weight:700;margin-bottom:12px">BrowserOS</div><div class="loader" style="width:40px;height:40px;border-width:6px;margin-bottom:12px"></div><div>Shutting down…</div>`;
+  document.body.appendChild(overlay);
+  setTimeout(()=> {
+    overlay.remove();
+    shutdownBlack.style.display = 'block';
+    shutdownBlack.style.zIndex = 999999;
+  }, 5000);
+}
+
+/* product key logic */
+activateBtn.addEventListener('click', ()=>{
+  const v = (productKeyInput.value || '').trim();
+  if(v === PRODUCT_KEY){
+    activated = true; save(K_ACT, true);
+    keyMsg.textContent = 'Activated ✓';
+    setTimeout(()=> transitionToDesktop(true), 450);
+  } else {
+    keyMsg.textContent = 'Invalid product key';
+  }
+});
+noKeyBtn.addEventListener('click', ()=>{
+  activated = false; save(K_ACT, false);
+  transitionToDesktop(false);
+});
+
+/* transitions */
+function fadeOut(el, ms=400){
+  el.style.transition = `opacity ${ms}ms ease`;
+  el.style.opacity = '0';
+  setTimeout(()=> { el.style.pointerEvents='none'; }, ms);
+}
+function fadeIn(el, ms=400){
+  el.style.transition = `opacity ${ms}ms ease`;
+  el.style.opacity = '1';
+  el.style.pointerEvents='auto';
+}
+
+function transitionToDesktop(isActivated){
+  // fade keyScreen out smoothly, fade desktop & taskbar in
+  fadeOut(keyScreen, 400);
+  setTimeout(()=> {
+    keyScreen.style.display = 'none';
+    // show desktop & taskbar
+    fadeIn(desktop, 400);
+    fadeIn(taskbar, 400);
+    desktop.style.pointerEvents = 'auto';
+    taskbar.style.pointerEvents = 'auto';
+    // apply activation UI
+    activated = isActivated;
+    save(K_ACT, activated);
+    if(!activated){
+      watermark.classList.remove('hidden');
+      // disallow wallpaper if not activated — handled in wallpaper saving
+    } else {
+      watermark.classList.add('hidden');
+    }
+    // apply wallpaper if saved and activated
+    applyWallpaper();
+    // render icons
+    renderIcons();
+  }, 420);
+}
+
+/* handle start button */
+startBtn.addEventListener('click', toggleStartMenu);
+
+/* keyboard: Esc closes start menu if open */
+document.addEventListener('keydown', (e)=> {
+  if(e.key === 'Escape' && startOpen){ const m = document.getElementById('startMenu'); if(m) m.remove(); startOpen=false; }
+});
+
+/* utility */
 function escapeHtml(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
-/* initialize wallpaper from storage */
-(function restoreWallpaper(){
-  const wp = loadJSON(WALLPAPER_KEY, null);
-  if(wp){
-    desktop.style.backgroundImage = `url("${wp}")`;
+/* init: boot -> product key (if activation previously chosen, skip key if activated true/false?) 
+   We'll show key screen only if activated not set (null). If previously set, go directly to desktop with transitions.
+*/
+window.addEventListener('load', ()=>{
+  // show boot
+  bootScreen.style.opacity = '1';
+  // If activation already set:
+  if(activated === true){
+    // show boot for 7s then go straight to desktop
+    setTimeout(()=> {
+      bootScreen.style.opacity = '0'; bootScreen.style.pointerEvents='none';
+      // show desktop
+      fadeIn(desktop,400); fadeIn(taskbar,400); desktop.style.pointerEvents='auto'; taskbar.style.pointerEvents='auto';
+      watermark.classList.add('hidden');
+      applyWallpaper();
+      renderIcons();
+    },7000);
+  } else if(activated === false){
+    // previously chose no-key -> show watermark and go to desktop after boot
+    setTimeout(()=> {
+      bootScreen.style.opacity = '0'; bootScreen.style.pointerEvents='none';
+      fadeIn(desktop,400); fadeIn(taskbar,400); desktop.style.pointerEvents='auto'; taskbar.style.pointerEvents='auto';
+      watermark.classList.remove('hidden');
+      applyWallpaper();
+      renderIcons();
+    },7000);
   } else {
-    // keep gradient default
-    desktop.style.backgroundImage = '';
+    // show boot then product key
+    bootSequence();
+    // show key screen transitions handled in bootSequence
   }
-})();
+});
 
-/* initial render */
-renderIcons();
+/* make sure clicking outside start menu closes it - small global click handler */
+document.addEventListener('click', (e)=>{
+  const menu = document.getElementById('startMenu');
+  if(menu && !menu.contains(e.target) && e.target !== startBtn){
+    menu.remove(); startOpen=false;
+  }
+});
 
-/* Expose helper to reset state in console if needed */
-window.browserOS = {
-  resetPositions(){ positions = {}; saveJSON(DESKTOP_KEY, positions); location.reload(); },
-  resetFS(){ localStorage.removeItem(FS_KEY); location.reload(); },
-  resetWallpaper(){ localStorage.removeItem(WALLPAPER_KEY); location.reload(); }
+/* helper to open apps by id */
+function openApp(id){
+  if(id === 'recycle') openRecycle();
+  else if(id === 'calculator') openCalculator();
+  else if(id === 'explorer') openExplorer();
+  else if(id === 'browser') openBrowser();
+}
+
+/* last: ensure wallpaper / activation saved when user refreshes */
+applyWallpaper();
+save(K_FS, fs);
+save(K_POS, positions);
+save(K_BIN, binState);
+
+/* Expose quick debug functions on window for convenience */
+window.BrowserOS = {
+  resetAll(){ localStorage.clear(); location.reload(); },
+  resetPositions(){ localStorage.removeItem(K_POS); location.reload(); },
+  activateDemo(){ activated = true; save(K_ACT, true); location.reload(); }
 };
 </script>
 </body>
