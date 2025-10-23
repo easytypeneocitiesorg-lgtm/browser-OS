@@ -88,3 +88,164 @@ input,button,textarea{font-size:14px;}
   <div class="loading"></div>
   <p>Shutting down...</p>
 </div>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const bootScreen = document.getElementById("bootScreen");
+  const activationScreen = document.getElementById("activationScreen");
+  const desktopScreen = document.getElementById("desktopScreen");
+  const shutdownScreen = document.getElementById("shutdownScreen");
+  const keysInput = document.getElementById("keysInput");
+  const activationStatus = document.getElementById("activationStatus");
+  const watermark = document.getElementById("watermark");
+
+  // --- Simulated Activation Keys ---
+  const validKeys = ["BROWSER-OS-123", "ACTIVATE-KEY-001", "BOS-2025-PRO"];
+
+  // --- Boot Sequence ---
+  setTimeout(() => {
+    bootScreen.classList.remove("active");
+    const isActivated = localStorage.getItem("browserOS_activated") === "true";
+    if (isActivated) {
+      desktopScreen.classList.add("active");
+      watermark.style.display = "none";
+    } else {
+      activationScreen.classList.add("active");
+    }
+  }, 3500);
+
+  // --- Activation Logic ---
+  document.getElementById("activateButton").addEventListener("click", () => {
+    const entered = keysInput.value.trim();
+    if (validKeys.includes(entered)) {
+      localStorage.setItem("browserOS_activated", "true");
+      activationStatus.textContent = "Activated successfully!";
+      setTimeout(() => {
+        activationScreen.classList.remove("active");
+        desktopScreen.classList.add("active");
+        watermark.style.display = "none";
+      }, 1500);
+    } else {
+      activationStatus.textContent = "Invalid key!";
+    }
+  });
+
+  // --- Shutdown Button ---
+  document.getElementById("shutdownButton").addEventListener("click", () => {
+    desktopScreen.classList.remove("active");
+    shutdownScreen.classList.add("active");
+    setTimeout(() => {
+      shutdownScreen.classList.remove("active");
+      bootScreen.classList.add("active");
+      setTimeout(() => location.reload(), 2500);
+    }, 3000);
+  });
+
+  // --- Clock Widget ---
+  const clockWidget = document.getElementById("clockWidget");
+  function updateClock() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    clockWidget.textContent = timeStr;
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // --- Desktop Icon Click Handling ---
+  document.querySelectorAll(".icon").forEach(icon => {
+    icon.addEventListener("dblclick", () => {
+      if (icon.id === "iconExplorer") {
+        const isActivated = localStorage.getItem("browserOS_activated") === "true";
+        if (!isActivated) {
+          alert("File Explorer only works when BrowserOS is activated.");
+          return;
+        }
+        openFileExplorer();
+      } else if (icon.id.startsWith("fakeApp_")) {
+        simulateAppRun(icon.dataset.exeName);
+      } else {
+        alert(`${icon.querySelector("span").textContent} opened!`);
+      }
+    });
+  });
+
+  // --- Fake File Explorer Function ---
+  function openFileExplorer() {
+    const files = JSON.parse(localStorage.getItem("browserOS_files") || "[]");
+    let fileList = files.map(f => `<li>${f}</li>`).join("");
+    if (!fileList) fileList = "<li>No files found.</li>";
+    const explorer = window.open("", "", "width=600,height=400");
+    explorer.document.write(`
+      <title>File Explorer</title>
+      <h3>Desktop Files</h3>
+      <ul>${fileList}</ul>
+    `);
+  }
+
+  // --- Simulate .exe Downloading ---
+  window.simulateDownload = function(exeName, sizeMB) {
+    const win = window.open("", "", "width=600,height=300");
+    win.document.write(`
+      <style>
+        body { background: black; color: lime; font-family: monospace; padding: 20px; }
+        #bar { background: lime; height: 20px; width: 0%; transition: width 0.1s; }
+        #container { background: #111; width: 100%; height: 20px; margin-top: 10px; }
+      </style>
+      <h3>Downloading ${exeName}.exe...</h3>
+      <div id="container"><div id="bar"></div></div>
+      <p id="status">0%</p>
+    `);
+
+    let progress = 0;
+    const downloadTime = Math.min(Math.max(sizeMB * 80, 2000), 15000); // ms
+    const interval = setInterval(() => {
+      progress += 2;
+      win.document.getElementById("bar").style.width = progress + "%";
+      win.document.getElementById("status").textContent = progress + "%";
+      if (progress >= 100) {
+        clearInterval(interval);
+        win.document.body.innerHTML += `<p>Download complete.</p>`;
+        registerFakeApp(exeName);
+      }
+    }, downloadTime / 50);
+  };
+
+  // --- Register Fake .exe on Desktop ---
+  function registerFakeApp(exeName) {
+    const icon = document.createElement("div");
+    icon.className = "icon";
+    icon.id = "fakeApp_" + exeName.toLowerCase().replace(/\s+/g, "_");
+    icon.dataset.exeName = exeName;
+    icon.style.top = `${100 + Math.random() * 400}px`;
+    icon.style.left = `${200 + Math.random() * 400}px`;
+    icon.innerHTML = `
+      <img src="https://img.icons8.com/fluency/48/application-window.png" />
+      <span>${exeName}.exe</span>
+    `;
+    document.getElementById("desktopScreen").appendChild(icon);
+    saveFileToDesktop(`${exeName}.exe`);
+    icon.addEventListener("dblclick", () => simulateAppRun(exeName));
+  }
+
+  // --- Save Fake File to "File Explorer" ---
+  function saveFileToDesktop(name) {
+    const files = JSON.parse(localStorage.getItem("browserOS_files") || "[]");
+    if (!files.includes(name)) {
+      files.push(name);
+      localStorage.setItem("browserOS_files", JSON.stringify(files));
+    }
+  }
+
+  // --- Simulate Running Fake App ---
+  function simulateAppRun(exeName) {
+    const win = window.open("", "", "width=500,height=300");
+    win.document.write(`
+      <style>body { background:black; color:lime; font-family:monospace; padding:20px; }</style>
+      <h3>Executing ${exeName}.exe...</h3>
+      <p>Loading...</p>
+    `);
+    setTimeout(() => {
+      win.document.body.innerHTML += `<p style="color:red;">File execution error code 1: this file or program could not be executed.</p>`;
+    }, 2500 + Math.random() * 2000);
+  }
+});
+</script>
