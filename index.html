@@ -249,3 +249,155 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 </script>
+<style>
+  * {
+    user-select: none;
+  }
+
+  body {
+    margin: 0;
+    background: url("https://copilot.microsoft.com/th/id/BCO.99351b73-c924-4ea6-8114-a3d2e0e35372.png") center/cover no-repeat;
+    height: 100vh;
+    font-family: "Segoe UI", sans-serif;
+    overflow: hidden;
+  }
+
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .screen.active {
+    display: flex;
+  }
+
+  #bootScreen {
+    background: black;
+    color: white;
+    font-size: 2em;
+    animation: fadein 2s ease-in-out;
+  }
+
+  #activationScreen {
+    background: rgba(0,0,0,0.8);
+    color: white;
+    flex-direction: column;
+  }
+
+  #activationScreen input {
+    padding: 10px;
+    font-size: 1em;
+    margin-top: 10px;
+    width: 250px;
+    text-align: center;
+  }
+
+  #activationScreen button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 1em;
+    background: limegreen;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  #activationStatus {
+    margin-top: 10px;
+    font-weight: bold;
+  }
+
+  #desktopScreen {
+    background: rgba(0,0,0,0.1);
+    position: absolute;
+    inset: 0;
+  }
+
+  #watermark {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.9em;
+  }
+
+  #shutdownButton {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: crimson;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  #clockWidget {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: white;
+    font-weight: bold;
+    font-size: 1.5em;
+    text-shadow: 0 0 5px black;
+  }
+
+  .icon {
+    position: absolute;
+    width: 80px;
+    text-align: center;
+    cursor: pointer;
+    color: white;
+    font-size: 0.9em;
+  }
+
+  .icon img {
+    width: 48px;
+    height: 48px;
+    display: block;
+    margin: 0 auto 5px;
+  }
+
+  #iconExplorer {
+    top: 100px;
+    left: 100px;
+  }
+
+  #iconSnake {
+    top: 100px;
+    left: 220px;
+  }
+
+  #iconMinesweeper {
+    top: 220px;
+    left: 100px;
+  }
+
+  .icon span {
+    display: block;
+    background: rgba(0,0,0,0.4);
+    padding: 2px;
+    border-radius: 4px;
+  }
+
+  #iconExplorer span.gray {
+    color: gray;
+  }
+
+  #shutdownScreen {
+    background: black;
+    color: red;
+    font-size: 2em;
+  }
+
+  @keyframes fadein {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+</style>
+</html>
