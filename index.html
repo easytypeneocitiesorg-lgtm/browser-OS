@@ -10,21 +10,16 @@ body{background:black;}
 .screen{position:absolute;width:100%;height:100%;display:flex;justify-content:center;align-items:center;transition:opacity 0.5s;}
 #bootScreen,#productKeyScreen,#desktopScreen,#shutdownScreen{display:none;flex-direction:column;color:white;}
 #bootScreen,#shutdownScreen{background:#111;flex-direction:column;}
-#desktopScreen{
-  background-image:url("https://copilot.microsoft.com/th/id/BCO.99351b73-c924-4ea6-8114-a3d2e0e35372.png");
-  background-size:cover;
-  background-position:center;
-  overflow:hidden;
-}
+#desktopScreen{background-size:cover;background-position:center;overflow:hidden;background-image:url('https://copilot.microsoft.com/th/id/BCO.99351b73-c924-4ea6-8114-a3d2e0e35372.png');}
 #desktopScreen .icon{width:80px;text-align:center;cursor:grab;position:absolute;}
 #desktopScreen .icon img{width:64px;height:64px;display:block;margin:0 auto;}
 #taskbar{position:absolute;bottom:0;left:0;width:100%;height:40px;background:rgba(0,0,0,0.7);display:flex;align-items:center;padding:0 5px;box-sizing:border-box;}
 #startButton{width:60px;height:30px;background:#444;color:white;cursor:pointer;display:flex;justify-content:center;align-items:center;margin-right:5px;}
-.window{position:absolute;background:#ddd;border:1px solid #888;width:400px;height:300px;box-shadow:2px 2px 10px rgba(0,0,0,0.5);display:flex;flex-direction:column;resize:both;overflow:auto;}
+.window{position:absolute;background:#ddd;border:1px solid #888;width:400px;height:300px;box-shadow:2px 2px 10px rgba(0,0,0,0.5);display:flex;flex-direction:column;}
 .window-header{background:#555;color:white;padding:5px;cursor:move;display:flex;justify-content:space-between;align-items:center;}
-.window-content{flex:1;padding:5px;background:#fff;overflow:auto;color:black;}
+.window-content{flex:1;padding:5px;background:#fff;overflow:auto;}
 .window-buttons button{margin-left:2px;}
-#watermark{position:absolute;bottom:10px;right:10px;color:rgba(128,128,128,0.8);font-size:30px;pointer-events:none;z-index:9999;display:none;}
+#watermark{position:absolute;bottom:10px;right:10px;color: rgba(128,128,128,0.8);font-size:30px;pointer-events:none;z-index:9999;display:none;}
 input,button,textarea{font-size:14px;}
 .loading{border:8px solid #f3f3f3;border-top:8px solid #555;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;margin-top:20px;}
 @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
@@ -32,7 +27,7 @@ input,button,textarea{font-size:14px;}
 .folder-list li{cursor:pointer;margin:3px 0;padding:3px 5px;border-radius:3px;}
 .folder-list li:hover{background:#777;}
 .breadcrumbs{margin-bottom:5px;}
-#clockWidget{position:absolute;top:10px;right:10px;color:white;font-family:monospace;font-size:16px;}
+#clockWidget{position:absolute;top:5px;right:10px;color:white;font-size:18px;pointer-events:none;}
 </style>
 </head>
 <body>
@@ -46,7 +41,7 @@ input,button,textarea{font-size:14px;}
 <!-- Product Key Screen -->
 <div id="productKeyScreen" class="screen">
   <h2>Enter Product Key</h2>
-  <input type="text" id="productKeyInput" placeholder="XXXX.XXXX.XXXX.XXXX" />
+  <input type="text" id="productKeyInput" placeholder="Enter key" />
   <div style="margin-top:10px;">
     <button id="submitKey">Submit</button>
     <button id="skipKey">I don't have a product key</button>
@@ -59,13 +54,34 @@ input,button,textarea{font-size:14px;}
   <div id="clockWidget"></div>
 
   <!-- Icons -->
-  <div class="icon" id="iconCalculator" style="top:50px; left:50px;"><img src="https://img.icons8.com/fluency/48/calculator.png" /><span>Calculator</span></div>
-  <div class="icon" id="iconExplorer" style="top:150px; left:50px;"><img src="https://img.icons8.com/fluency/48/folder-invoices.png" /><span>File Explorer</span></div>
-  <div class="icon" id="iconRecycle" style="top:250px; left:50px;"><img src="https://img.icons8.com/fluency/48/recycle-bin.png" /><span>Recycle Bin</span></div>
-  <div class="icon" id="iconBrowser" style="top:350px; left:50px;"><img src="https://img.icons8.com/fluency/48/internet.png" /><span>Browser</span></div>
-  <div class="icon" id="iconWallpaper" style="top:450px; left:50px; cursor:pointer;"><img src="https://img.icons8.com/fluency/48/image.png" /><span>wallpaper.jpg</span></div>
-  <div class="icon" id="iconSnake" style="top:550px; left:50px;"><img src="https://img.icons8.com/fluency/48/snake.png" /><span>Snake</span></div>
-  <div class="icon" id="iconMinesweeper" style="top:650px; left:50px;"><img src="https://img.icons8.com/fluency/48/minesweeper.png" /><span>Minesweeper</span></div>
+  <div class="icon" id="iconCalculator" style="top:50px; left:50px;">
+    <img src="https://img.icons8.com/fluency/48/calculator.png"/>
+    <span>Calculator</span>
+  </div>
+  <div class="icon" id="iconExplorer" style="top:150px; left:50px;">
+    <img src="https://img.icons8.com/fluency/48/folder-invoices.png"/>
+    <span>File Explorer</span>
+  </div>
+  <div class="icon" id="iconRecycle" style="top:250px; left:50px;">
+    <img src="https://img.icons8.com/fluency/48/recycle-bin.png"/>
+    <span>Recycle Bin</span>
+  </div>
+  <div class="icon" id="iconBrowser" style="top:350px; left:50px;">
+    <img src="https://img.icons8.com/fluency/48/internet.png"/>
+    <span>Browser</span>
+  </div>
+  <div class="icon" id="iconWallpaper" style="top:450px; left:50px; cursor:pointer;">
+    <img src="https://img.icons8.com/fluency/48/image.png"/>
+    <span>wallpaper.jpg</span>
+  </div>
+  <div class="icon" id="iconSnake" style="top:50px; left:150px;">
+    <img src="https://img.icons8.com/fluency/48/snake.png"/>
+    <span>Snake</span>
+  </div>
+  <div class="icon" id="iconMinesweeper" style="top:150px; left:150px;">
+    <img src="https://img.icons8.com/fluency/48/minesweeper.png"/>
+    <span>Minesweeper</span>
+  </div>
 
   <!-- Taskbar -->
   <div id="taskbar">
@@ -83,19 +99,21 @@ input,button,textarea{font-size:14px;}
 </div>
 
 <script>
-// Variables
-let productKeyValid = false;
-const desktopScreen = document.getElementById('desktopScreen');
-const keysURL = 'https://raw.githack.com/easytypeneocitiesorg-lgtm/browser-OS/main/keys.txt';
-const clockWidget = document.getElementById('clockWidget');
+let productKeyValid=false;
+let desktopScreen=document.getElementById('desktopScreen');
+let minimizedWindows=[];
+let fileSystem={Desktop:[],Documents:[],Downloads:[{name:"Import File",type:"import"}],Pictures:[]};
 
 // Clock Widget
-function updateClock(){ clockWidget.textContent = new Date().toLocaleTimeString(); }
-setInterval(updateClock, 1000); updateClock();
+function updateClock(){
+  const now=new Date();
+  document.getElementById('clockWidget').textContent=now.toLocaleTimeString();
+}
+setInterval(updateClock,1000);
+updateClock();
 
-// Boot
+// Boot sequence
 document.getElementById('bootScreen').style.display='flex';
-new Audio('https://www.soundjay.com/button/beep-07.wav').play();
 setTimeout(()=>{
   document.getElementById('bootScreen').style.opacity=0;
   setTimeout(()=>{
@@ -105,35 +123,25 @@ setTimeout(()=>{
   },500);
 },7000);
 
-// Fetch keys & token binding
-async function checkKey(inputKey){
+// Product key
+const keyFileURL="https://raw.githack.com/easytypeneocitiesorg-lgtm/browser-OS/main/keys.txt";
+
+async function checkKey(key){
   try{
-    const resp = await fetch(keysURL);
-    const text = await resp.text();
-    const keys = text.split('/').map(k=>k.trim()).filter(k=>k);
-    const bindings = JSON.parse(localStorage.getItem('bos_bindings')||'{}');
-    let token = localStorage.getItem('bos_token');
-    if(!token){ token='token_'+Date.now(); localStorage.setItem('bos_token',token);}
-    if(keys.includes(inputKey)){
-      if(!bindings[inputKey]){ bindings[inputKey]=token; localStorage.setItem('bos_bindings',JSON.stringify(bindings)); }
-      if(bindings[inputKey]===token) return true;
-    }
-    return false;
-  } catch(e){ alert('Error fetching keys'); return false; }
+    const res=await fetch(keyFileURL);
+    const txt=await res.text();
+    const keys=txt.split('/');
+    return keys.includes(key);
+  }catch(e){ alert("Error fetching keys"); return false; }
 }
 
-// Product Key
 document.getElementById('submitKey').addEventListener('click',async()=>{
   const key=document.getElementById('productKeyInput').value.trim();
-  if(await checkKey(key)){
-    productKeyValid=true;
-    startDesktop();
-    new Audio('https://www.soundjay.com/button/button-09.wav').play();
-  } else alert('Invalid key!');
+  if(await checkKey(key)){ productKeyValid=true; startDesktop(); }
+  else{ alert("Invalid key"); }
 });
 document.getElementById('skipKey').addEventListener('click',()=>{ productKeyValid=false; startDesktop(); });
 
-// Start Desktop
 function startDesktop(){
   document.getElementById('productKeyScreen').style.opacity=0;
   setTimeout(()=>{
@@ -151,16 +159,18 @@ document.getElementById('shutdownButton').addEventListener('click',()=>{
     desktopScreen.style.display='none';
     const shutdown=document.getElementById('shutdownScreen');
     shutdown.style.display='flex';
-    new Audio('https://www.soundjay.com/button/button-3.wav').play();
-    setTimeout(()=>{ shutdown.style.display='none'; document.body.style.background='black'; },5000);
+    setTimeout(()=>{
+      shutdown.style.display='none';
+      document.body.style.background='black';
+    },5000);
   },500);
 });
 
-// Drag Icons
-const icons = document.querySelectorAll('#desktopScreen .icon');
+// Drag & Drop icons
+const icons=document.querySelectorAll('#desktopScreen .icon');
 icons.forEach(icon=>{
   icon.onmousedown=function(e){
-    if(icon.id==='iconWallpaper' && !productKeyValid){ alert('Enter product key to change wallpaper'); return; }
+    if(icon.id==="iconWallpaper" && !productKeyValid){ alert("Enter product key to change wallpaper."); return; }
     let shiftX=e.clientX-icon.getBoundingClientRect().left;
     let shiftY=e.clientY-icon.getBoundingClientRect().top;
     function moveAt(pageX,pageY){ icon.style.left=pageX-shiftX+'px'; icon.style.top=pageY-shiftY+'px'; }
@@ -178,9 +188,8 @@ document.getElementById('iconWallpaper').addEventListener('dblclick',()=>{
   if(url) desktopScreen.style.backgroundImage=`url(${url})`;
 });
 
-// Function to create windows
-function createWindow(title,content,allowWithoutKey=false){
-  if(!allowWithoutKey && !productKeyValid) content=`<p style="color:gray">${content}</p>`;
+// Window creation
+function createWindow(title,content){
   const win=document.createElement('div'); win.className='window'; win.style.top='100px'; win.style.left='100px';
   const header=document.createElement('div'); header.className='window-header';
   header.innerHTML=`<span>${title}</span>`;
@@ -192,7 +201,6 @@ function createWindow(title,content,allowWithoutKey=false){
   const contentDiv=document.createElement('div'); contentDiv.className='window-content'; contentDiv.innerHTML=content;
   win.appendChild(contentDiv);
   desktopScreen.appendChild(win);
-  new Audio('https://www.soundjay.com/button/beep-10.wav').play();
 
   // Drag
   header.onmousedown=function(e){
@@ -219,12 +227,84 @@ function createWindow(title,content,allowWithoutKey=false){
 }
 
 // Apps
-document.getElementById('iconCalculator').addEventListener('dblclick',()=>{ createWindow('Calculator','<input id="calcInput" type="text" style="width:100%"/><button onclick="document.getElementById(\'calcInput\').value=eval(document.getElementById(\'calcInput\').value)">=</button>',true); });
-document.getElementById('iconExplorer').addEventListener('dblclick',()=>{ createWindow('File Explorer','File Explorer works only when activated'); });
-document.getElementById('iconBrowser').addEventListener('dblclick',()=>{ createWindow('Browser','<input type="text" placeholder="URL"/><iframe src="https://example.com" style="width:100%;height:200px"></iframe>',true); });
-document.getElementById('iconSnake').addEventListener('dblclick',()=>{ createWindow('Snake','Snake works only when activated'); });
-document.getElementById('iconMinesweeper').addEventListener('dblclick',()=>{ createWindow('Minesweeper','Minesweeper works only when activated'); });
+document.getElementById('iconCalculator').addEventListener('dblclick',()=>{
+  createWindow("Calculator",`<p>Simple Calculator:</p>
+    <input id="calcInput" type="text" style="width:100%;"/><br>
+    <button onclick="document.getElementById('calcInput').value=eval(document.getElementById('calcInput').value)">=</button>`);
+});
 
+document.getElementById('iconExplorer').addEventListener('dblclick',()=>{
+  if(!productKeyValid){
+    createWindow("File Explorer","<p style='color:gray'>File Explorer works only when activated</p>");
+  } else{
+    createWindow("File Explorer","<p>File Explorer ready</p>");
+  }
+});
+
+document.getElementById('iconBrowser').addEventListener('dblclick',()=>{
+  createWindow("Internet Browser",`<input id="browserUrl" type="text" placeholder="Enter URL" style="width:80%;" />
+  <button onclick="this.nextElementSibling.src=document.getElementById('browserUrl').value">Go</button>
+  <iframe src="https://example.com" style="width:100%;height:150px;margin-top:5px;"></iframe>`);
+});
+
+// Snake
+document.getElementById('iconSnake').addEventListener('dblclick',()=>{
+  if(!productKeyValid) return;
+  createWindow("Snake",`
+    <canvas id="snakeCanvas" width="300" height="300" style="border:1px solid #000"></canvas>
+    <p id="snakeScore">Score: 0</p>
+    <button id="snakeRestart">Restart</button>
+  `);
+  const canvas=document.getElementById('snakeCanvas'); const ctx=canvas.getContext('2d'); const box=15;
+  let snake=[{x:7*box,y:7*box}]; let dir='RIGHT'; let food={x:Math.floor(Math.random()*20)*box, y:Math.floor(Math.random()*20)*box}; let score=0;
+  function draw(){
+    ctx.fillStyle='white'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    for(let s of snake){ ctx.fillStyle='green'; ctx.fillRect(s.x,s.y,box,box);}
+    ctx.fillStyle='red'; ctx.fillRect(food.x,food.y,box,box);
+    let head={...snake[0]};
+    if(dir==='LEFT') head.x-=box; if(dir==='RIGHT') head.x+=box; if(dir==='UP') head.y-=box; if(dir==='DOWN') head.y+=box;
+    if(head.x<0||head.y<0||head.x>=canvas.width||head.y>=canvas.height||snake.some(s=>s.x===head.x&&s.y===head.y)){ clearInterval(game); alert('Game Over!'); return; }
+    snake.unshift(head);
+    if(head.x===food.x&&head.y===food.y){ score++; document.getElementById('snakeScore').textContent='Score: '+score; food={x:Math.floor(Math.random()*20)*box,y:Math.floor(Math.random()*20)*box}; }
+    else snake.pop();
+  }
+  document.addEventListener('keydown',e=>{ if(e.key==='ArrowLeft'&&dir!=='RIGHT') dir='LEFT'; if(e.key==='ArrowRight'&&dir!=='LEFT') dir='RIGHT'; if(e.key==='ArrowUp'&&dir!=='DOWN') dir='UP'; if(e.key==='ArrowDown'&&dir!=='UP') dir='DOWN'; });
+  let game=setInterval(draw,150);
+  document.getElementById('snakeRestart').addEventListener('click',()=>{ snake=[{x:7*box,y:7*box}]; dir='RIGHT'; score=0; document.getElementById('snakeScore').textContent='Score: 0'; });
+});
+
+// Minesweeper
+document.getElementById('iconMinesweeper').addEventListener('dblclick',()=>{
+  if(!productKeyValid) return;
+  createWindow("Minesweeper",`<div id="msContainer"></div>`);
+  const container=document.getElementById('msContainer'); const rows=8, cols=8, minesCount=10;
+  let board=[], revealed=[], flags=[];
+  function initBoard(){
+    container.innerHTML=''; board=[]; revealed=[]; flags=[];
+    for(let r=0;r<rows;r++){ board[r]=[]; revealed[r]=[]; flags[r]=[]; for(let c=0;c<cols;c++) board[r][c]=0; }
+    let placed=0; while(placed<minesCount){ let r=Math.floor(Math.random()*rows), c=Math.floor(Math.random()*cols); if(board[r][c]!==9){ board[r][c]=9; placed++; } }
+    for(let r=0;r<rows;r++){ for(let c=0;c<cols;c++){ if(board[r][c]===9) continue; let count=0; for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ let nr=r+dr, nc=c+dc; if(nr>=0&&nr<rows&&nc>=0&&nc<cols&&board[nr][nc]===9) count++; } board[r][c]=count; } }
+    renderBoard();
+  }
+  function renderBoard(){
+    container.innerHTML='';
+    for(let r=0;r<rows;r++){
+      let rowDiv=document.createElement('div');
+      for(let c=0;c<cols;c++){
+        let cell=document.createElement('button'); cell.style.width='30px'; cell.style.height='30px'; cell.style.margin='1px';
+        if(revealed[r][c]){ cell.textContent=board[r][c]===0?'':board[r][c]===9?'💣':board[r][c]; cell.disabled=true; }
+        else if(flags[r][c]) cell.textContent='🚩'; else cell.textContent='';
+        cell.addEventListener('click',()=>{ reveal(r,c); });
+        cell.addEventListener('contextmenu',e=>{ e.preventDefault(); flags[r][c]=!flags[r][c]; renderBoard(); });
+        rowDiv.appendChild(cell);
+      }
+      container.appendChild(rowDiv);
+    }
+  }
+  function reveal(r,c){ if(revealed[r][c]||flags[r][c]) return; revealed[r][c]=true; if(board[r][c]===9){ renderBoard(); alert('Game Over!'); initBoard(); return; } if(board[r][c]===0){ for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ let nr=r+dr, nc=c+dc; if(nr>=0&&nr<rows&&nc>=0&&nc<cols) reveal(nr,nc); } } if(checkWin()){ alert('You Win!'); initBoard(); return; } renderBoard(); }
+  function checkWin(){ for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){ if(board[r][c]!==9&&!revealed[r][c]) return false; } return true; }
+  initBoard();
+});
 </script>
 </body>
 </html>
