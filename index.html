@@ -402,6 +402,110 @@ document.getElementById('iconBrowser').addEventListener('dblclick',()=>{
     <iframe src="https://example.com" style="width:100%;height:150px;margin-top:5px;"></iframe>`
   );
 });
+<!-- --- FAKE EXE DOWNLOAD & EXECUTION SYSTEM --- -->
+<script>
+function createCMDWindow(title, contentHTML) {
+  const win = document.createElement("div");
+  win.className = "window";
+  win.style.top = "120px";
+  win.style.left = "120px";
+  const header = document.createElement("div");
+  header.className = "window-header";
+  header.innerHTML = `<span>${title}</span>`;
+  const closeBtn = document.createElement("button");
+  closeBtn.textContent = "✕";
+  header.appendChild(closeBtn);
+  win.appendChild(header);
+  const contentDiv = document.createElement("div");
+  contentDiv.className = "window-content";
+  contentDiv.style.background = "black";
+  contentDiv.style.color = "white";
+  contentDiv.style.fontFamily = "Consolas, monospace";
+  contentDiv.style.whiteSpace = "pre";
+  contentDiv.innerHTML = contentHTML;
+  win.appendChild(contentDiv);
+  desktopScreen.appendChild(win);
+  closeBtn.onclick = () => win.remove();
+  return contentDiv;
+}
+
+// helper to simulate .exe download
+function simulateEXEDownload(fileName, sizeMB) {
+  const cmd = createCMDWindow("Command Prompt", `Downloading ${fileName}.exe\n`);
+  let progress = 0;
+  const totalTime = sizeMB * 500; // ms per MB
+  const totalSteps = 20;
+  const interval = totalTime / totalSteps;
+  let elapsed = 0;
+  const timer = setInterval(() => {
+    elapsed += interval;
+    progress++;
+    const percent = Math.min((progress / totalSteps) * 100, 100);
+    const doneMB = (sizeMB * (percent / 100)).toFixed(1);
+    cmd.textContent =
+      `Downloading ${fileName}.exe\nProgress: [${"█".repeat(progress)}${"░".repeat(totalSteps - progress)}] ${percent.toFixed(
+        0
+      )}% (${doneMB} MB / ${sizeMB} MB)\nEstimated time: ${(totalTime - elapsed) / 1000 > 0 ? ((totalTime - elapsed) / 1000).toFixed(0) : 0} s`;
+    if (progress >= totalSteps) {
+      clearInterval(timer);
+      cmd.textContent += `\n\nDownload completed successfully.\nPress any key to continue...`;
+      cmd.addEventListener("keydown", () => cmd.parentElement.remove());
+      document.addEventListener("keydown", () => {
+        createFakeEXEIcon(fileName);
+      }, { once: true });
+    }
+  }, interval);
+}
+
+function createFakeEXEIcon(fileName) {
+  const icon = document.createElement("div");
+  icon.className = "icon icon-imported";
+  icon.style.left = `${Math.random() * 400 + 200}px`;
+  icon.style.top = `${Math.random() * 200 + 100}px`;
+  icon.innerHTML = `<img src="https://img.icons8.com/fluency/48/application-window.png"/><span>${fileName}.exe</span>`;
+  icon.ondblclick = () => runFakeEXE(fileName);
+  desktopScreen.appendChild(icon);
+}
+
+function runFakeEXE(fileName) {
+  const cmd = createCMDWindow("Command Prompt", `Running ${fileName}.exe...\nInitializing modules...`);
+  setTimeout(() => {
+    cmd.textContent += `\nLoading runtime environment...\n`;
+  }, 1500);
+  setTimeout(() => {
+    cmd.textContent += `\nERROR: File execution error code 1:\nThis file or program could not be executed.`;
+  }, 3000);
+}
+
+// add fake exe import option in file explorer downloads folder
+const oldRenderExplorer = renderExplorer;
+renderExplorer = function (path) {
+  let base = oldRenderExplorer(path);
+  if (path === "Downloads" && activated) {
+    base += `<button id="importExeBtn" style="margin-top:10px;">Import .exe Link</button>`;
+  }
+  return base;
+};
+
+// hook refreshContent to support .exe import
+const oldCreateExplorerWindow = createExplorerWindow;
+createExplorerWindow = function (title, initialFolder) {
+  oldCreateExplorerWindow(title, initialFolder);
+  setTimeout(() => {
+    const btn = document.getElementById("importExeBtn");
+    if (btn) {
+      btn.onclick = () => {
+        const link = prompt("Enter direct link to .exe file:");
+        if (!link) return;
+        const fileName = link.split("/").pop().replace(".exe", "");
+        const fakeSize = Math.floor(Math.random() * 40) + 10; // 10–50 MB
+        simulateEXEDownload(fileName, fakeSize);
+      };
+    }
+  }, 500);
+};
+</script>
+
 </script>
 </body>
 </html>
