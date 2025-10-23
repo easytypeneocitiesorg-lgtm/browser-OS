@@ -23,7 +23,23 @@ body{background:black;}
 input,button,textarea{font-size:14px;}
 .loading{border:8px solid #f3f3f3;border-top:8px solid #555;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;margin-top:20px;}
 @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
-.folder-list li{cursor:pointer;margin:3px 0;}
+.folder-list {
+  list-style-type: none;
+  padding-left: 0;
+  background: #555;      /* Gray background for the folder/file list */
+  color: white;           /* White text */
+  padding: 10px;
+  border-radius: 5px;
+}
+.folder-list li {
+  cursor: pointer;
+  margin: 3px 0;
+  padding: 3px 5px;
+  border-radius: 3px;
+}
+.folder-list li:hover {
+  background: #777;       /* Slightly lighter gray on hover */
+}
 </style>
 </head>
 <body>
