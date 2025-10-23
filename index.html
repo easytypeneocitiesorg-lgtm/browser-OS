@@ -47,3 +47,44 @@ input,button,textarea{font-size:14px;}
     <button id="skipKey">I don't have a product key</button>
   </div>
 </div>
+<!-- Desktop -->
+<div id="desktopScreen" class="screen">
+  <div id="watermark">Activate BrowserOS</div>
+  <div id="clockWidget"></div>
+
+  <!-- Default Desktop Icons -->
+  <div class="icon" id="iconCalculator" style="top:50px; left:50px;">
+    <img src="https://img.icons8.com/fluency/48/calculator.png" />
+    <span>Calculator</span>
+  </div>
+  <div class="icon" id="iconExplorer" style="top:150px; left:50px;">
+    <img src="https://img.icons8.com/fluency/48/folder-invoices.png" />
+    <span>File Explorer</span>
+  </div>
+  <div class="icon" id="iconRecycle" style="top:250px; left:50px;">
+    <img src="https://img.icons8.com/fluency/48/recycle-bin.png" />
+    <span>Recycle Bin</span>
+  </div>
+  <div class="icon" id="iconBrowser" style="top:350px; left:50px;">
+    <img src="https://img.icons8.com/fluency/48/internet.png" />
+    <span>Browser</span>
+  </div>
+  <div class="icon" id="iconWallpaper" style="top:450px; left:50px;">
+    <img src="https://img.icons8.com/fluency/48/image.png" />
+    <span>wallpaper.jpg</span>
+  </div>
+
+  <!-- Taskbar -->
+  <div id="taskbar">
+    <div id="startButton">Start</div>
+    <div id="minimizedApps" style="display:flex;"></div>
+    <button id="shutdownButton" style="margin-left:auto;">Shutdown</button>
+  </div>
+</div>
+
+<!-- Shutdown Screen -->
+<div id="shutdownScreen" class="screen">
+  <h1>BrowserOS</h1>
+  <div class="loading"></div>
+  <p>Shutting down...</p>
+</div>
