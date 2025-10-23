@@ -166,6 +166,7 @@ document.getElementById('skipKey').addEventListener('click',()=>{
   activated=false; startDesktop();
 });
 
+// --- START DESKTOP ---
 function startDesktop(){
   document.getElementById('productKeyScreen').style.opacity=0;
   setTimeout(()=>{
@@ -174,20 +175,29 @@ function startDesktop(){
     desktopScreen.style.opacity=1;
     if(!activated) document.getElementById('watermark').style.display='block';
 
-    // Show imported files on desktop
-    fileSystem.Downloads.forEach(f=>{
-      if(f.type==='html'){
-        const icon=document.createElement('div');
-        icon.className='icon';
-        icon.style.top=`${50 + desktopScreen.querySelectorAll('.icon').length*100}px`;
-        icon.style.left='200px';
-        icon.innerHTML=`<img src="https://img.icons8.com/fluency/48/document.png"/><span>${f.name}</span>`;
-        icon.ondblclick=()=>{ createWindow(f.name, `<iframe srcdoc='${f.content.replace(/'/g,"&#39;")}' style='width:100%;height:100%;'></iframe>`); };
-        desktopScreen.appendChild(icon);
-      }
-    });
-
+    // Show imported files on desktop, auto-arranged in grid
+    renderDesktopIcons();
   },500);
+}
+
+function renderDesktopIcons(){
+  // Remove old desktop imported icons
+  document.querySelectorAll('#desktopScreen .icon-imported').forEach(el=>el.remove());
+  let x = 200, y = 50, counter = 0;
+  fileSystem.Downloads.forEach(f=>{
+    if(f.type==='html'){
+      const icon=document.createElement('div');
+      icon.className='icon icon-imported';
+      icon.style.left=`${x}px`;
+      icon.style.top=`${y}px`;
+      icon.innerHTML=`<img src="https://img.icons8.com/fluency/48/document.png"/><span>${f.name}</span>`;
+      icon.ondblclick=()=>{ createWindow(f.name, `<iframe srcdoc='${f.content.replace(/'/g,"&#39;")}' style='width:100%;height:100%;'></iframe>`); };
+      desktopScreen.appendChild(icon);
+      counter++;
+      x += 100;
+      if(counter % 5 === 0){ x = 200; y += 100; }
+    }
+  });
 }
 
 // --- SHUTDOWN ---
@@ -232,6 +242,13 @@ function createWindow(title, content){
   const header=document.createElement('div'); header.className='window-header';
   header.innerHTML=`<span>${title}</span>`;
   const buttons=document.createElement('div'); buttons.className='window-buttons';
+
+  // Fullscreen / unfullscreen buttons
+  const fullBtn = document.createElement('button'); fullBtn.textContent='⬜';
+  const unfullBtn = document.createElement('button'); unfullBtn.textContent='❐';
+  buttons.appendChild(fullBtn);
+  buttons.appendChild(unfullBtn);
+
   const minBtn=document.createElement('button'); minBtn.textContent='—';
   const closeBtn=document.createElement('button'); closeBtn.textContent='✕';
   buttons.appendChild(minBtn); buttons.appendChild(closeBtn); header.appendChild(buttons);
@@ -239,6 +256,19 @@ function createWindow(title, content){
   const contentDiv=document.createElement('div'); contentDiv.className='window-content'; contentDiv.innerHTML=content;
   win.appendChild(contentDiv);
   desktopScreen.appendChild(win);
+
+  // Fullscreen / unfullscreen logic
+  let originalStyle = {};
+  fullBtn.addEventListener('click',()=>{
+    originalStyle={top:win.style.top,left:win.style.left,width:win.style.width,height:win.style.height};
+    win.style.top='0'; win.style.left='0'; win.style.width='100%'; win.style.height='100%';
+  });
+  unfullBtn.addEventListener('click',()=>{
+    if(originalStyle.width) {
+      win.style.top=originalStyle.top; win.style.left=originalStyle.left;
+      win.style.width=originalStyle.width; win.style.height=originalStyle.height;
+    }
+  });
 
   // Drag
   header.onmousedown=function(e){
@@ -323,6 +353,7 @@ function createExplorerWindow(title, initialFolder){
             const fileName="ImportedFile_"+Date.now()+".html";
             fileSystem.Downloads.push({name:fileName,type:'html',content:htmlContent});
             refreshContent();
+            renderDesktopIcons(); // auto-add to desktop
           }
         } else if(item.classList.contains('file-html')){
           const file=fileSystem.Downloads.find(f=>f.name===item.textContent);
