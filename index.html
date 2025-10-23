@@ -14,7 +14,9 @@ body{background:black;}
 #desktopScreen .icon{width:80px;text-align:center;cursor:grab;position:absolute;}
 #desktopScreen .icon img{width:64px;height:64px;display:block;margin:0 auto;}
 #taskbar{position:absolute;bottom:0;left:0;width:100%;height:40px;background:rgba(0,0,0,0.7);display:flex;align-items:center;padding:0 5px;box-sizing:border-box;}
-#startButton{width:60px;height:30px;background:#444;color:white;cursor:pointer;display:flex;justify-content:center;align-items:center;margin-right:5px;}
+#startButton{width:60px;height:30px;background:#444;color:white;cursor:pointer;display:flex;justify-content:center;align-items:center;margin-right:5px;position:relative;}
+.startMenu{position:absolute;bottom:40px;left:0;background:#222;color:white;padding:10px;display:none;flex-direction:column;z-index:10000;}
+.startMenu button{margin:3px 0;}
 .window{position:absolute;background:#ddd;border:1px solid #888;width:400px;height:300px;box-shadow:2px 2px 10px rgba(0,0,0,0.5);display:flex;flex-direction:column;}
 .window-header{background:#555;color:white;padding:5px;cursor:move;display:flex;justify-content:space-between;align-items:center;}
 .window-content{flex:1;padding:5px;background:#fff;overflow:auto;}
@@ -24,12 +26,11 @@ body{background:black;}
 input,button,textarea{font-size:14px;}
 .loading{border:8px solid #f3f3f3;border-top:8px solid #555;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;margin-top:20px;}
 @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
-.folder-list{list-style-type:none;padding-left:0;background:#555;color:white;padding:10px;border-radius:5px;}
-.folder-list li{cursor:pointer;margin:3px 0;padding:3px 5px;border-radius:3px;}
-.folder-list li:hover{background:#777;}
-.breadcrumbs{margin-bottom:5px;}
-#startMenu{position:absolute;bottom:40px;left:5px;background:rgba(50,50,50,0.95);color:white;padding:10px;border-radius:8px;display:none;flex-direction:column;z-index:10000;}
-#startMenu button{margin:3px 0;width:150px;}
+.folder-list {list-style-type: none; padding-left: 0; background: #555; color: white; padding: 10px; border-radius: 5px;}
+.folder-list li {cursor: pointer; margin: 3px 0; padding: 3px 5px; border-radius: 3px;}
+.breadcrumbs {margin-bottom:5px;}
+.file-html img{width:20px;height:20px;vertical-align:middle;margin-right:5px;}
+.file-bof img{width:20px;height:20px;vertical-align:middle;margin-right:5px;}
 </style>
 </head>
 <body>
@@ -77,14 +78,13 @@ input,button,textarea{font-size:14px;}
     <span>wallpaper.jpg</span>
   </div>
 
-  <!-- Start Menu -->
-  <div id="startMenu">
-    <button id="newBOF">New .bof File</button>
-  </div>
-
   <!-- Taskbar -->
   <div id="taskbar">
-    <div id="startButton">Start</div>
+    <div id="startButton">Start
+      <div class="startMenu" id="startMenu">
+        <button id="newBOF">New .bof File</button>
+      </div>
+    </div>
     <div id="minimizedApps" style="display:flex;"></div>
     <button id="shutdownButton" style="margin-left:auto;">Shutdown</button>
   </div>
@@ -103,7 +103,7 @@ let token = localStorage.getItem('bos_token');
 if(!token){ token='tok_'+Math.random().toString(36).substring(2,12); localStorage.setItem('bos_token', token); }
 let activated=false;
 
-// Simple file system
+// File system
 let fileSystem = {
   Desktop: [],
   Documents: [],
@@ -114,8 +114,9 @@ let fileSystem = {
 };
 
 const desktopScreen = document.getElementById('desktopScreen');
+let minimizedWindows = [];
 
-// --- CLOCK WIDGET ---
+// --- CLOCK ---
 function updateClock(){
   const now = new Date();
   const h = String(now.getHours()).padStart(2,'0');
@@ -126,14 +127,19 @@ function updateClock(){
 setInterval(updateClock,1000);
 updateClock();
 
-// Boot sequence
+// --- BOOT ---
 document.getElementById('bootScreen').style.display='flex';
 setTimeout(()=>{
-  document.getElementById('bootScreen').style.opacity=0;
+  const boot = document.getElementById('bootScreen');
+  boot.style.transition='opacity 0.5s';
+  boot.style.opacity=0;
   setTimeout(()=>{
-    document.getElementById('bootScreen').style.display='none';
-    document.getElementById('productKeyScreen').style.display='flex';
-    document.getElementById('productKeyScreen').style.opacity=1;
+    boot.style.display='none';
+    const pk = document.getElementById('productKeyScreen');
+    pk.style.display='flex';
+    pk.style.opacity=0;
+    pk.style.transition='opacity 0.5s';
+    setTimeout(()=>{ pk.style.opacity=1; },50);
   },500);
 },7000);
 
@@ -154,90 +160,178 @@ document.getElementById('submitKey').addEventListener('click',async ()=>{
   }catch(e){ console.error(e); alert("Error fetching keys"); }
 });
 
-document.getElementById('skipKey').addEventListener('click',()=>{
-  activated=false; startDesktop();
-});
+document.getElementById('skipKey').addEventListener('click',()=>{ activated=false; startDesktop(); });
 
 // --- START DESKTOP ---
 function startDesktop(){
-  document.getElementById('productKeyScreen').style.opacity=0;
+  const productKeyScreen = document.getElementById('productKeyScreen');
+  desktopScreen.style.display='flex';
+  desktopScreen.style.opacity=0;
+  desktopScreen.style.transition='opacity 0.5s';
+  productKeyScreen.style.transition='opacity 0.5s';
+  productKeyScreen.style.opacity=0;
   setTimeout(()=>{
-    document.getElementById('productKeyScreen').style.display='none';
-    desktopScreen.style.display='flex';
+    productKeyScreen.style.display='none';
     desktopScreen.style.opacity=1;
     if(!activated) document.getElementById('watermark').style.display='block';
-
-    // Show imported and .bof files on desktop
     renderDesktopIcons();
+    attachDesktopIconListeners();
   },500);
 }
 
+// --- RENDER DESKTOP ICONS ---
 function renderDesktopIcons(){
   document.querySelectorAll('#desktopScreen .icon-imported').forEach(el=>el.remove());
   let x = 200, y = 50, counter = 0;
-  fileSystem.Desktop.forEach(f=>{
+  fileSystem.Downloads.forEach(f=>{
+    if(f.type==='html'){
       const icon=document.createElement('div');
       icon.className='icon icon-imported';
-      icon.style.left=`${x}px`;
-      icon.style.top=`${y}px`;
-      let img="https://img.icons8.com/fluency/48/document.png";
-      if(f.type==='bof') img="https://img.icons8.com/fluency/48/source-code.png";
-      icon.innerHTML=`<img src="${img}"/><span>${f.name}</span>`;
-      icon.ondblclick=()=>{
-        if(f.type==='html' || f.type==='bof'){
-          createWindow(f.name, `<iframe srcdoc='${f.content.replace(/'/g,"&#39;")}' style='width:100%;height:100%;'></iframe>`);
-        }
-      };
-      makeIconDraggable(icon,f);
+      icon.style.left=`${x}px`; icon.style.top=`${y}px`;
+      icon.innerHTML=`<img src="https://img.icons8.com/fluency/48/document.png"/><span>${f.name}</span>`;
+      icon.ondblclick=()=>{ createWindow(f.name, `<iframe srcdoc='${f.content.replace(/'/g,"&#39;")}' style='width:100%;height:100%;'></iframe>`); };
       desktopScreen.appendChild(icon);
-      counter++;
-      x += 100;
-      if(counter % 5 === 0){ x = 200; y += 100; }
+    } else if(f.type==='bof'){
+      const icon=document.createElement('div');
+      icon.className='icon icon-imported';
+      icon.style.left=`${x}px`; icon.style.top=`${y}px`;
+      icon.innerHTML=`<img src="https://img.icons8.com/color/48/code.png"/><span>${f.name}</span>`;
+      icon.ondblclick=()=>{ createWindow(f.name, `<iframe srcdoc='${f.content.replace(/'/g,"&#39;")}' style='width:100%;height:100%;'></iframe>`); };
+      desktopScreen.appendChild(icon);
+    }
+    counter++;
+    x += 100; if(counter%5===0){ x=200; y+=100; }
   });
 }
 
-// --- DRAG & DROP ICONS WITH RECYCLE BIN ---
-function makeIconDraggable(icon,file){
-  icon.onmousedown=function(e){
-    let shiftX=e.clientX-icon.getBoundingClientRect().left;
-    let shiftY=e.clientY-icon.getBoundingClientRect().top;
-    function moveAt(pageX,pageY){ icon.style.left=pageX-shiftX+'px'; icon.style.top=pageY-shiftY+'px'; }
-    function onMouseMove(e){ moveAt(e.pageX,e.pageY); }
-    document.addEventListener('mousemove',onMouseMove);
-    icon.onmouseup=function(e){
-      document.removeEventListener('mousemove',onMouseMove);
-      icon.onmouseup=null;
-      const recycle=document.getElementById('iconRecycle').getBoundingClientRect();
-      if(e.clientX>recycle.left && e.clientX<recycle.right && e.clientY>recycle.top && e.clientY<recycle.bottom){
-        if(file.type==='html'||file.type==='bof'){
-          fileSystem.Desktop=fileSystem.Desktop.filter(f=>f!==file);
+// --- START MENU & NEW .BOF ---
+const startButton = document.getElementById('startButton');
+const startMenu = document.getElementById('startMenu');
+startButton.onclick = ()=> startMenu.style.display=startMenu.style.display==='flex'?'none':'flex';
+document.getElementById('newBOF').onclick=()=>{
+  if(!activated){ alert("Activate BrowserOS to create .bof files."); return; }
+  const content = prompt("Enter HTML content for .bof file:");
+  if(content){
+    const fileName = "NewFile_"+Date.now()+".bof";
+    fileSystem.Downloads.push({name:fileName,type:'bof',content});
+    renderDesktopIcons();
+    attachDesktopIconListeners();
+  }
+};
+
+// --- SHUTDOWN ---
+document.getElementById('shutdownButton').onclick = () => {
+  desktopScreen.style.transition = 'opacity 0.5s';
+  desktopScreen.style.opacity = 0;
+  setTimeout(()=>{
+    desktopScreen.style.display='none';
+    const shutdown = document.getElementById('shutdownScreen');
+    shutdown.style.display='flex';
+    shutdown.style.opacity=0;
+    shutdown.style.transition='opacity 0.5s';
+    setTimeout(()=>shutdown.style.opacity=1,50);
+    setTimeout(()=>{
+      shutdown.style.transition='opacity 1s';
+      shutdown.style.opacity=0;
+      setTimeout(()=>document.body.style.background='black',1000);
+    },5000);
+  },500);
+};
+
+// --- DRAG & DROP ICONS ---
+function attachDesktopIconListeners(){
+  const icons = document.querySelectorAll('#desktopScreen .icon, #desktopScreen .icon-imported');
+  icons.forEach(icon=>{
+    icon.onmousedown=function(e){
+      if(icon.id==="iconWallpaper" && !activated){ alert("Enter product key to change wallpaper."); return; }
+      let shiftX=e.clientX-icon.getBoundingClientRect().left;
+      let shiftY=e.clientY-icon.getBoundingClientRect().top;
+      function moveAt(pageX,pageY){ icon.style.left=pageX-shiftX+'px'; icon.style.top=pageY-shiftY+'px'; }
+      function onMouseMove(e){ moveAt(e.pageX,e.pageY); }
+      document.addEventListener('mousemove',onMouseMove);
+      icon.onmouseup=function(){
+        const bin = document.getElementById('iconRecycle').getBoundingClientRect();
+        const iconRect = icon.getBoundingClientRect();
+        if((iconRect.left>bin.left && iconRect.right<bin.right)&&(iconRect.top>bin.top && iconRect.bottom<bin.bottom)&&(icon.classList.contains('icon-imported'))){
+          const index = fileSystem.Downloads.findIndex(f=>f.name===icon.querySelector('span').textContent);
+          if(index!==-1) fileSystem.Downloads.splice(index,1);
           icon.remove();
         }
-      }
+        document.removeEventListener('mousemove',onMouseMove);
+        icon.onmouseup=null;
+      };
     };
-  };
-  icon.ondragstart=()=>false;
+    icon.ondragstart=()=>false;
+  });
 }
 
-// --- FILE EXPLORER ---
-document.getElementById('iconExplorer').addEventListener('dblclick',()=>{
-  if(!activated){ alert("Activate BrowserOS to use File Explorer."); return; }
-  createExplorerWindow("File Explorer", "Downloads");
+// --- WALLPAPER ---
+document.getElementById('iconWallpaper').addEventListener('dblclick',()=>{
+  if(!activated) return;
+  const url=prompt("Enter image URL or leave blank to upload a local file:");
+  if(url) desktopScreen.style.backgroundImage=`url(${url})`;
 });
 
+// --- GENERIC WINDOW CREATOR ---
+function createWindow(title,contentHTML){
+  const win=document.createElement('div'); win.className='window'; win.style.top='120px'; win.style.left='120px';
+  const header=document.createElement('div'); header.className='window-header'; header.innerHTML=`<span>${title}</span>`;
+  const buttons=document.createElement('div'); buttons.className='window-buttons';
+  const minBtn=document.createElement('button'); minBtn.textContent='—';
+  const closeBtn=document.createElement('button'); closeBtn.textContent='✕';
+  buttons.appendChild(minBtn); buttons.appendChild(closeBtn); header.appendChild(buttons);
+  win.appendChild(header);
+  const contentDiv=document.createElement('div'); contentDiv.className='window-content'; contentDiv.innerHTML=contentHTML;
+  win.appendChild(contentDiv);
+  desktopScreen.appendChild(win);
+
+  header.onmousedown=function(e){
+    let shiftX=e.clientX-win.getBoundingClientRect().left;
+    let shiftY=e.clientY-win.getBoundingClientRect().top;
+    function moveAt(pageX,pageY){ win.style.left=pageX-shiftX+'px'; win.style.top=pageY-shiftY+'px'; }
+    function onMouseMove(e){ moveAt(e.pageX,e.pageY); }
+    document.addEventListener('mousemove',onMouseMove);
+    document.onmouseup=function(){ document.removeEventListener('mousemove',onMouseMove); document.onmouseup=null; };
+  };
+  header.ondragstart=()=>false;
+
+  closeBtn.addEventListener('click',()=>win.remove());
+  minBtn.addEventListener('click',()=>{
+    win.style.display='none';
+    const tbIcon=document.createElement('button'); tbIcon.textContent=title;
+    tbIcon.onclick=()=>{win.style.display='flex'; tbIcon.remove();};
+    document.getElementById('minimizedApps').appendChild(tbIcon);
+  });
+}
+
+// --- CALCULATOR APP ---
+document.getElementById('iconCalculator').addEventListener('dblclick',()=>{
+  createWindow("Calculator",
+    `<p>Simple Calculator:</p>
+    <input id="calcInput" type="text" style="width:100%;"/><br>
+    <button onclick="document.getElementById('calcInput').value=eval(document.getElementById('calcInput').value)">=</button>`
+  );
+});
+
+// --- FILE EXPLORER ---
 function renderExplorer(path){
   const folder=fileSystem[path];
   let html=`<div class="breadcrumbs">Current folder: ${path}</div>`;
   html+='<ul class="folder-list">';
   folder.forEach(f=>{
-    if(f.type==='import') html+=`<li class="file-import">${f.name}</li>`;
-    else if(f.type==='html') html+=`<li class="file-html">${f.name}</li>`;
-    else if(f.type==='bof') html+=`<li class="file-bof">${f.name}</li>`;
+    if(f.type==='import') html+=`<li class="file-import"><img src="https://img.icons8.com/fluency/20/document.png"/>${f.name}</li>`;
+    else if(f.type==='html') html+=`<li class="file-html"><img src="https://img.icons8.com/fluency/20/document.png"/>${f.name}</li>`;
+    else if(f.type==='bof') html+=`<li class="file-bof"><img src="https://img.icons8.com/color/20/code.png"/>${f.name}</li>`;
     else html+=`<li class="folder">${f.name}</li>`;
   });
   html+='</ul>';
   return html;
 }
+
+document.getElementById('iconExplorer').addEventListener('dblclick',()=>{
+  if(!activated){ alert("Activate BrowserOS to use File Explorer."); return; }
+  createExplorerWindow("File Explorer", "Downloads");
+});
 
 function createExplorerWindow(title, initialFolder){
   const win=document.createElement('div'); win.className='window'; win.style.top='100px'; win.style.left='100px';
@@ -258,35 +352,15 @@ function createExplorerWindow(title, initialFolder){
     const items = contentDiv.querySelectorAll('li');
     items.forEach(item=>{
       item.addEventListener('dblclick',()=>{
-        if(item.classList.contains('folder')){
-          if(fileSystem[item.textContent]){ currentFolder=item.textContent; refreshContent(); }
-        } else if(item.classList.contains('file-import')){
-          if(!activated){ alert("Activate BrowserOS to import files."); return; }
-          const htmlContent=prompt("Enter HTML content for new file:");
-          if(htmlContent){
-            const fileName="ImportedFile_"+Date.now()+".html";
-            fileSystem.Downloads.push({name:fileName,type:'html',content:htmlContent});
-            refreshContent();
-            renderDesktopIcons();
-          }
-        } else if(item.classList.contains('file-html')){
-          const file=fileSystem.Downloads.find(f=>f.name===item.textContent);
-          if(file){
-            createWindow(file.name, `<iframe srcdoc='${file.content.replace(/'/g,"&#39;")}' style='width:100%;height:100%;'></iframe>`);
-          }
-        } else if(item.classList.contains('file-bof')){
-          const file=fileSystem.Desktop.find(f=>f.name===item.textContent);
-          if(file){
-            createWindow(file.name, `<iframe srcdoc='${file.content.replace(/'/g,"&#39;")}' style='width:100%;height:100%;'></iframe>`);
-          }
-        }
+        const file = fileSystem.Downloads.find(f=>f.name===item.textContent);
+        if(item.classList.contains('folder') && fileSystem[item.textContent]){ currentFolder=item.textContent; refreshContent(); }
+        else if(file){ createWindow(file.name, `<iframe srcdoc='${file.content.replace(/'/g,"&#39;")}' style='width:100%;height:100%;'></iframe>`); }
       });
     });
   }
 
   refreshContent();
 
-  // Drag
   header.onmousedown=function(e){
     let shiftX=e.clientX-win.getBoundingClientRect().left;
     let shiftY=e.clientY-win.getBoundingClientRect().top;
@@ -296,82 +370,23 @@ function createExplorerWindow(title, initialFolder){
     document.onmouseup=function(){ document.removeEventListener('mousemove',onMouseMove); document.onmouseup=null; };
   };
   header.ondragstart=()=>false;
-
-  closeBtn.addEventListener('click',()=>{ win.remove(); });
+  closeBtn.addEventListener('click',()=>win.remove());
   minBtn.addEventListener('click',()=>{
     win.style.display='none';
-    const taskbar=document.getElementById('minimizedApps');
     const tbIcon=document.createElement('button'); tbIcon.textContent=title;
-    tbIcon.addEventListener('click',()=>{ win.style.display='flex'; taskbar.removeChild(tbIcon); });
-    taskbar.appendChild(tbIcon);
+    tbIcon.onclick=()=>{win.style.display='flex'; tbIcon.remove();};
+    document.getElementById('minimizedApps').appendChild(tbIcon);
   });
 }
 
-// --- CREATE NEW .BOF FILE (ONLY IF ACTIVATED) ---
-document.getElementById('newBOF').addEventListener('click',()=>{
-  if(!activated){ alert("Activate BrowserOS to create .bof files."); return; }
-  const win=document.createElement('div'); win.className='window'; win.style.top='100px'; win.style.left='100px';
-  const header=document.createElement('div'); header.className='window-header'; header.innerHTML='<span>New .bof File</span>';
-  const btns=document.createElement('div'); const saveBtn=document.createElement('button'); saveBtn.textContent='Save'; btns.appendChild(saveBtn);
-  header.appendChild(btns); win.appendChild(header);
-  const content=document.createElement('div'); content.className='window-content';
-  content.innerHTML='<textarea id="bofEditor" style="width:100%;height:100%;"></textarea>'; win.appendChild(content);
-  desktopScreen.appendChild(win);
-
-  // Drag window
-  header.onmousedown=function(e){
-    let sx=e.clientX-win.getBoundingClientRect().left;
-    let sy=e.clientY-win.getBoundingClientRect().top;
-    function moveAt(px,py){ win.style.left=px-sx+'px'; win.style.top=py-sy+'px'; }
-    function onMouseMove(e){ moveAt(e.pageX,e.pageY); }
-    document.addEventListener('mousemove',onMouseMove);
-    document.onmouseup=function(){ document.removeEventListener('mousemove',onMouseMove); document.onmouseup=null; };
-  };
-
-  saveBtn.onclick=()=>{
-    const code=document.getElementById('bofEditor').value;
-    const fileName="NewFile_"+Date.now()+".bof";
-    fileSystem.Desktop.push({name:fileName,type:'bof',content:code});
-    win.remove();
-    renderDesktopIcons();
-  };
-});
-
-// --- CALCULATOR ---
-document.getElementById('iconCalculator').ondblclick=()=>{
-  createWindow("Calculator",
-    `<p>Simple Calculator</p><input id="calcInput" type="text" style="width:100%;"/><button onclick="document.getElementById('calcInput').value=eval(document.getElementById('calcInput').value)">=</button>`
-  );
-};
-
-// --- BROWSER ---
-document.getElementById('iconBrowser').ondblclick=()=>{
+// --- BROWSER APP ---
+document.getElementById('iconBrowser').addEventListener('dblclick',()=>{
   createWindow("Internet Browser",
-    `<input id="browserUrl" type="text" placeholder="Enter URL" style="width:80%;"/><button onclick="this.nextElementSibling.src=document.getElementById('browserUrl').value">Go</button><iframe src="https://example.com" style="width:100%;height:150px;margin-top:5px;"></iframe>`
+    `<input id="browserUrl" type="text" placeholder="Enter URL" style="width:80%;" />
+    <button onclick="this.nextElementSibling.src=document.getElementById('browserUrl').value">Go</button>
+    <iframe src="https://example.com" style="width:100%;height:150px;margin-top:5px;"></iframe>`
   );
-};
-
-// --- WALLPAPER ---
-document.getElementById('iconWallpaper').ondblclick=()=>{
-  if(!activated) return;
-  const url=prompt("Enter image URL:");
-  if(url) desktopScreen.style.backgroundImage=`url(${url})`;
-};
-
-// --- START MENU ---
-const startBtn=document.getElementById('startButton');
-const startMenu=document.getElementById('startMenu');
-startBtn.onclick=()=>{ startMenu.style.display=startMenu.style.display==='flex'?'none':'flex'; };
-
-// --- SHUTDOWN ---
-document.getElementById('shutdownButton').onclick=()=>{
-  desktopScreen.style.opacity=0;
-  setTimeout(()=>{
-    desktopScreen.style.display='none';
-    document.getElementById('shutdownScreen').style.display='flex';
-    document.getElementById('shutdownScreen').style.opacity=1;
-  },500);
-};
+});
 </script>
 </body>
 </html>
