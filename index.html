@@ -20,9 +20,9 @@ body{background:black;}
 #desktopScreen .icon img{width:64px;height:64px;display:block;margin:0 auto;}
 #taskbar{position:absolute;bottom:0;left:0;width:100%;height:40px;background:rgba(0,0,0,0.7);display:flex;align-items:center;padding:0 5px;box-sizing:border-box;}
 #startButton{width:60px;height:30px;background:#444;color:white;cursor:pointer;display:flex;justify-content:center;align-items:center;margin-right:5px;}
-.window{position:absolute;background:#ddd;border:1px solid #888;width:400px;height:300px;box-shadow:2px 2px 10px rgba(0,0,0,0.5);display:flex;flex-direction:column;}
+.window{position:absolute;background:#ddd;border:1px solid #888;width:400px;height:300px;box-shadow:2px 2px 10px rgba(0,0,0,0.5);display:flex;flex-direction:column;resize:both;overflow:auto;}
 .window-header{background:#555;color:white;padding:5px;cursor:move;display:flex;justify-content:space-between;align-items:center;}
-.window-content{flex:1;padding:5px;background:#fff;overflow:auto;}
+.window-content{flex:1;padding:5px;background:#fff;overflow:auto;color:black;}
 .window-buttons button{margin-left:2px;}
 #watermark{position:absolute;bottom:10px;right:10px;color:rgba(128,128,128,0.8);font-size:30px;pointer-events:none;z-index:9999;display:none;}
 input,button,textarea{font-size:14px;}
@@ -64,8 +64,8 @@ input,button,textarea{font-size:14px;}
   <div class="icon" id="iconRecycle" style="top:250px; left:50px;"><img src="https://img.icons8.com/fluency/48/recycle-bin.png" /><span>Recycle Bin</span></div>
   <div class="icon" id="iconBrowser" style="top:350px; left:50px;"><img src="https://img.icons8.com/fluency/48/internet.png" /><span>Browser</span></div>
   <div class="icon" id="iconWallpaper" style="top:450px; left:50px; cursor:pointer;"><img src="https://img.icons8.com/fluency/48/image.png" /><span>wallpaper.jpg</span></div>
-  <div class="icon" id="iconSnake" style="top:550px; left:50px; cursor:pointer;"><img src="https://img.icons8.com/fluency/48/snake.png" /><span>Snake</span></div>
-  <div class="icon" id="iconMinesweeper" style="top:650px; left:50px; cursor:pointer;"><img src="https://img.icons8.com/fluency/48/minesweeper.png" /><span>Minesweeper</span></div>
+  <div class="icon" id="iconSnake" style="top:550px; left:50px;"><img src="https://img.icons8.com/fluency/48/snake.png" /><span>Snake</span></div>
+  <div class="icon" id="iconMinesweeper" style="top:650px; left:50px;"><img src="https://img.icons8.com/fluency/48/minesweeper.png" /><span>Minesweeper</span></div>
 
   <!-- Taskbar -->
   <div id="taskbar">
@@ -179,8 +179,8 @@ document.getElementById('iconWallpaper').addEventListener('dblclick',()=>{
 });
 
 // Function to create windows
-function createWindow(title,content){
-  if(title!=="Calculator" && title!=="File Explorer" && title!=="Snake" && title!=="Minesweeper" && title!=="Browser" && !productKeyValid) return;
+function createWindow(title,content,allowWithoutKey=false){
+  if(!allowWithoutKey && !productKeyValid) content=`<p style="color:gray">${content}</p>`;
   const win=document.createElement('div'); win.className='window'; win.style.top='100px'; win.style.left='100px';
   const header=document.createElement('div'); header.className='window-header';
   header.innerHTML=`<span>${title}</span>`;
@@ -216,24 +216,14 @@ function createWindow(title,content){
     tbIcon.addEventListener('click',()=>{ win.style.display='flex'; taskbar.removeChild(tbIcon); });
     taskbar.appendChild(tbIcon);
   });
-
-  // Resize
-  win.style.resize='both';
-  win.style.overflow='auto';
 }
 
-// Calculator
-document.getElementById('iconCalculator').addEventListener('dblclick',()=>{ createWindow('Calculator','<input id="calcInput" type="text" style="width:100%"/><button onclick="document.getElementById(\'calcInput\').value=eval(document.getElementById(\'calcInput\').value)">=</button>'); });
-
-// File Explorer placeholder
-document.getElementById('iconExplorer').addEventListener('dblclick',()=>{ createWindow('File Explorer','<p>File Explorer works only if activated</p>'); });
-
-// Browser
-document.getElementById('iconBrowser').addEventListener('dblclick',()=>{ createWindow('Browser','<input type="text" placeholder="URL"/><iframe src="https://example.com" style="width:100%;height:200px"></iframe>'); });
-
-// Snake & Minesweeper
-document.getElementById('iconSnake').addEventListener('dblclick',()=>{ createWindow('Snake','<p>Snake works only if activated</p>'); });
-document.getElementById('iconMinesweeper').addEventListener('dblclick',()=>{ createWindow('Minesweeper','<p>Minesweeper works only if activated</p>'); });
+// Apps
+document.getElementById('iconCalculator').addEventListener('dblclick',()=>{ createWindow('Calculator','<input id="calcInput" type="text" style="width:100%"/><button onclick="document.getElementById(\'calcInput\').value=eval(document.getElementById(\'calcInput\').value)">=</button>',true); });
+document.getElementById('iconExplorer').addEventListener('dblclick',()=>{ createWindow('File Explorer','File Explorer works only when activated'); });
+document.getElementById('iconBrowser').addEventListener('dblclick',()=>{ createWindow('Browser','<input type="text" placeholder="URL"/><iframe src="https://example.com" style="width:100%;height:200px"></iframe>',true); });
+document.getElementById('iconSnake').addEventListener('dblclick',()=>{ createWindow('Snake','Snake works only when activated'); });
+document.getElementById('iconMinesweeper').addEventListener('dblclick',()=>{ createWindow('Minesweeper','Minesweeper works only when activated'); });
 
 </script>
 </body>
